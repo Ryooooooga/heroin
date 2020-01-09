@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"Ryooooooga"
+	],
+	"copyright": "Copyright © 2020, Ryooooooga",
+	"description": "A toy HTTP server written in D",
+	"license": "MIT",
+	"name": "heroin"
+}
