@@ -1,9 +1,7 @@
 {
-	"authors": [
-		"Ryooooooga"
-	],
-	"copyright": "Copyright © 2020, Ryooooooga",
-	"description": "A toy HTTP server written in D",
-	"license": "MIT",
-	"name": "heroin"
+  "name": "heroin",
+  "description": "A toy HTTP server written in D",
+  "authors": ["Ryooooooga <ryoga_314@yahoo.co.jp>"],
+  "copyright": "Copyright © 2020, Ryooooooga",
+  "license": "MIT"
 }

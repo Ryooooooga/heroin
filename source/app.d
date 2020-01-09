@@ -1,6 +1,8 @@
 import std.stdio;
+import http;
 
 void main()
 {
-	writeln("Edit source/app.d to start your project.");
+    Request req;
+    req.writeln();
 }
