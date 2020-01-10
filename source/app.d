@@ -1,8 +1,8 @@
 import std.stdio;
 import http;
+import server;
 
 void main()
 {
-    Request req;
-    req.writeln();
+    new HttpServer().listen(3000);
 }
