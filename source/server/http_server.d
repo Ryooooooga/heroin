@@ -55,13 +55,13 @@ class HttpServer
         auto request = Request.parse(request_text);
         request.writeln();
 
-        switch (request.method.text)
+        switch (request.method)
         {
-        case Method.GET.text:
+        case Method.GET:
             socket.send("HTTP/1.1 200 OK\r\n\r\n");
             break;
 
-        case Method.HEAD.text:
+        case Method.HEAD:
             socket.send("HTTP/1.1 200 OK\r\n\r\n");
             break;
 

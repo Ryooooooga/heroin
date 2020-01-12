@@ -4,82 +4,83 @@ import std.algorithm;
 import std.array;
 import std.exception;
 import std.string;
+import stream;
 
-struct Method
+enum Method
 {
-    static immutable Method GET = Method("GET");
-    static immutable Method POST = Method("POST");
-    static immutable Method PUT = Method("PUT");
-    static immutable Method DELETE = Method("DELETE");
-    static immutable Method HEAD = Method("HEAD");
-
-    string text;
+    GET = "GET",
+    POST = "POST",
+    PUT = "PUT",
+    DELETE = "DELETE",
+    HEAD = "HEAD",
 }
 
-struct HttpVersion
+enum HttpVersion
 {
-    static immutable HttpVersion HTTP_1_1 = HttpVersion("HTTP/1.1");
-
-    string text;
+    HTTP_1_1 = "HTTP/1.1",
 }
 
 struct Request
 {
-    Method method;
+    private InputStream _stream;
+
+    string method;
     string request_uri;
-    HttpVersion http_version;
+    string http_version;
     string[string] headers;
-    string body;
 
     static Request parse(string text)
     {
-        Request req;
+        return parse(new MemoryStream(text.dup));
+    }
 
-        auto split = text.findSplit("\r\n").enforce("empty requests");
+    static Request parse(InputStream stream)
+    {
+        Request req;
+        req._stream = stream;
 
         // request-line
-        const request_line = split[0].split(" ");
-        enforce(request_line.length == 3, "invalid request-line formats");
-
-        req.method = Method(request_line[0]);
-        req.request_uri = request_line[1];
-        req.http_version = HttpVersion(request_line[2]);
-
-        text = split[2];
+        req.method = stream.readln(" ").strip;
+        req.request_uri = stream.readln(" ").strip;
+        req.http_version = stream.readln("\r\n").strip;
 
         // *(header)
-        split = text.findSplit("\r\n\r\n").enforce("missing the end of message-headers");
-
-        auto key_values = split[0].split("\r\n").map!(line => line.findSplit(":")
-                .enforce("missing ':' in a meassage-header"));
-
-        foreach (key, _, value; key_values)
+        string line;
+        while ((line = stream.readln("\r\n")) != "\r\n")
         {
-            req.headers[key] = value.strip;
+            const key_value = line.findSplit(":").enforce("missing ':' in a meassage-header");
+
+            req.headers[key_value[0]] = key_value[2].strip;
         }
-
-        text = split[2];
-
-        // body
-        req.body = text;
 
         return req;
     }
 
+    string body()
+    {
+        string body_text;
+        while (!_stream.eof)
+        {
+            body_text ~= cast(string) _stream.read(1024);
+        }
+
+        return body_text;
+    }
+
     unittest
     {
-        const req = Request.parse(
+        auto req = Request.parse(
                 "GET / HTTP/1.1\r\nHost: example.com\r\nUser-Agent: unittest \r\n\r\nbody\r\n");
 
         assert(req.method == Method.GET);
         assert(req.request_uri == "/");
         assert(req.http_version == HttpVersion.HTTP_1_1);
 
-        assert(req.headers == cast(const)[
+        assert(req.headers == [
                 "Host": "example.com",
                 "User-Agent": "unittest",
                 ]);
 
-        assert(req.body == "body\r\n");
+        assert(req.body() == "body\r\n");
     }
 }
