@@ -23,6 +23,7 @@ enum HttpVersion
 struct Request
 {
     private InputStream _stream;
+    private string _body;
 
     string method;
     string request_uri;
@@ -58,13 +59,12 @@ struct Request
 
     string body()
     {
-        string body_text;
-        while (!_stream.eof)
+        if (_body)
         {
-            body_text ~= cast(string) _stream.read(1024);
+            return _body;
         }
 
-        return body_text;
+        return _body = _stream.readAll();
     }
 
     unittest
@@ -81,6 +81,6 @@ struct Request
                 "User-Agent": "unittest",
                 ]);
 
-        assert(req.body() == "body\r\n");
+        assert(req.body == "body\r\n");
     }
 }

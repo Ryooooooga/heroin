@@ -3,63 +3,88 @@ module stream;
 import std.algorithm;
 import std.string;
 
-interface InputStream
+abstract class InputStream
 {
-    @property bool eof() const;
+    private char[] _lookahead;
+    private bool _eof;
 
-    byte[] peek(size_t max_size);
+    @property bool eof() const
+    {
+        return _eof;
+    }
 
-    byte[] read(size_t max_size);
+    string readAll()
+    {
+        string all = _lookahead.idup;
+        _lookahead = [];
 
-    string readln(string delimitor = "\r\n");
+        while (true)
+        {
+            char[1024] buffer;
+            const len = readBlock(buffer);
+
+            if (len <= 0)
+            {
+                return all;
+            }
+
+            all ~= buffer[0 .. len];
+        }
+    }
+
+    string readln(string delimitor = "\r\n")
+    {
+        while (true)
+        {
+            const index = _lookahead.indexOf(delimitor);
+
+            if (index >= 0)
+            {
+                const end = index + delimitor.length;
+                const line = _lookahead[0 .. end];
+                _lookahead = _lookahead[end .. $];
+
+                return line.idup;
+            }
+
+            if (_eof)
+            {
+                throw new Error("stream already reached eof");
+            }
+
+            char[1024] buffer;
+            const len = readBlock(buffer);
+
+            if (len <= 0)
+            {
+                _eof = true;
+            }
+
+            _lookahead ~= buffer[0 .. max(len, 0)];
+        }
+    }
+
+    protected ptrdiff_t readBlock(char[] buffer);
 }
 
 class MemoryStream : InputStream
 {
-    private const(byte[]) _data;
+    private string _data;
     private size_t _cursor_read;
 
-    this(const(byte[]) data)
+    this(string data)
     {
         _data = data;
         _cursor_read = 0;
     }
 
-    this(string data)
+    protected override ptrdiff_t readBlock(char[] buffer)
     {
-        this(cast(const(byte[])) data);
-    }
+        const rest = _data.length - _cursor_read;
+        const size_read = min(buffer.length, rest);
 
-    @property bool eof() const
-    {
-        return _cursor_read >= _data.length;
-    }
-
-    byte[] peek(size_t max_size)
-    {
-        if (eof)
-        {
-            throw new Error("input stream already reached eof");
-        }
-
-        return _data[_cursor_read .. min(_cursor_read + max_size, $)].dup;
-    }
-
-    byte[] read(size_t max_size)
-    {
-        auto bytes = peek(max_size);
-        _cursor_read += bytes.length;
-
-        return bytes;
-    }
-
-    string readln(string delimitor = "\r\n")
-    {
-        auto index = indexOf(cast(string) _data, delimitor, _cursor_read);
-        if (index < 0)
-        {
-            return cast(string) read(_data.length - _cursor_read);
-        }
-        return cast(string) read(index - _cursor_read + delimitor.length);
+        _data[_cursor_read .. _cursor_read + size_read].copy(buffer);
+        _cursor_read += size_read;
+        return size_read;
     }
 }

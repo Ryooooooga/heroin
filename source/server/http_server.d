@@ -6,6 +6,7 @@ import std.stdio;
 import std.string;
 import std.algorithm.searching;
 import http;
+import socket_stream;
 
 class HttpServer
 {
@@ -38,21 +39,7 @@ class HttpServer
 
     private void worker(Socket socket)
     {
-        char[1024] buffer;
-        string request_text;
-
-        long length;
-        while ((length = socket.receive(buffer)) > 0)
-        {
-            request_text ~= buffer[0 .. length];
-
-            if (request_text.canFind("\r\n\r\n"))
-            {
-                break;
-            }
-        }
-
-        auto request = Request.parse(request_text);
+        auto request = Request.parse(new SocketStream(socket));
         request.writeln();
 
         switch (request.method)
