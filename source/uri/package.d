@@ -18,9 +18,9 @@ class Uri
         auto hash_index = text.indexOf('#', query_index);
         hash_index = hash_index == -1 ? text.length : hash_index;
 
-        const path = text[0..query_index];
-        const query = text[query_index..hash_index];
-        const hash = text[hash_index..$];
+        const path = text[0 .. query_index];
+        const query = text[query_index .. hash_index];
+        const hash = text[hash_index .. $];
 
         _text = text;
         _path = path;

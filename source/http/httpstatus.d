@@ -3,6 +3,8 @@ module httpstatus;
 enum HttpStatus : int
 {
     OK = 200,
+
+    NOT_FOUND = 404
 }
 
 string text(HttpStatus status)
@@ -11,5 +13,7 @@ string text(HttpStatus status)
     {
     case HttpStatus.OK:
         return "OK";
+    case HttpStatus.NOT_FOUND:
+        return "Not Found";
     }
 }
