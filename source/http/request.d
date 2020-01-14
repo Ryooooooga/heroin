@@ -5,6 +5,7 @@ import std.array;
 import std.exception;
 import std.string;
 import stream;
+import httpversion;
 
 enum Method
 {
@@ -15,11 +16,6 @@ enum Method
     HEAD = "HEAD",
 }
 
-enum HttpVersion
-{
-    HTTP_1_1 = "HTTP/1.1",
-}
-
 class Request
 {
     private InputStream _stream;
@@ -27,7 +23,7 @@ class Request
 
     string method;
     string requestUri;
-    string httpVersion;
+    HttpVersion httpVersion;
     string[string] headers;
 
     static Request parse(string text)
@@ -74,7 +70,7 @@ class Request
 
         assert(req.method == Method.GET);
         assert(req.requestUri == "/");
-        assert(req.httpVersion == HttpVersion.HTTP_1_1);
+        assert(req.httpVersion == HttpVersions.HTTP_1_1);
 
         assert(req.headers == [
                 "Host": "example.com",
