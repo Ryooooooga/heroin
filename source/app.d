@@ -14,6 +14,8 @@ shared class SimpleApplication : Application
         _router = new shared(Router)();
 
         _router.get("/", (req, res) => render_file(req, res, "./static/index.html"));
+        _router.get("/app.js", (req, res) => render_file(req, res, "./static/app.js"));
+        _router.get("/articles.json", (req, res) => render_file(req, res, "./static/articles.json"));
     }
 
     void onListened(ushort port)
