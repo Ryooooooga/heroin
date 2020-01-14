@@ -2,62 +2,72 @@ module http_server;
 
 import std.concurrency;
 import std.socket;
-import std.stdio;
 import std.string;
 import std.algorithm.searching;
 import http;
 import socket_stream;
+import application;
 
 class HttpServer
 {
-    private TcpSocket socket;
+    private shared Application _app;
+    private TcpSocket _socket;
 
-    this()
+    this(shared Application app)
     {
-        socket = new TcpSocket();
+        _app = app;
+        _socket = new TcpSocket();
     }
 
     void listen(ushort port = 3000, int backlog = 10)
     {
-        socket.bind(new InternetAddress(port));
-        socket.listen(backlog);
+        _socket.bind(new InternetAddress(port));
+        _socket.listen(backlog);
 
-        writef("server listening at port %d...\n", port);
+        _app.onListened(port);
 
         while (true)
         {
             try
             {
-                spawn(function(shared Socket client_socket) {
-                    onConnect(cast(Socket) client_socket);
-                }, cast(shared) socket.accept());
+                spawn(function(shared Application app, shared Socket client_socket) {
+                    onConnected(app, cast(Socket) client_socket);
+                }, _app, cast(shared) _socket.accept());
             }
             catch (Throwable e)
             {
-                stderr.writeln(e);
+                _app.onError(e);
             }
         }
     }
 
-    private static void onConnect(Socket socket)
+    private static void onConnected(shared Application app, Socket socket)
     {
-        auto request = Request.parse(new SocketStream(socket));
-
-        switch (request.method)
+        try
         {
-        case Method.GET:
-            socket.send("HTTP/1.1 200 OK\r\n\r\n");
-            break;
+            auto request = Request.parse(new SocketStream(socket));
+            app.onConnected(request);
 
-        case Method.HEAD:
-            socket.send("HTTP/1.1 200 OK\r\n\r\n");
-            break;
+            switch (request.method)
+            {
+            case Method.GET:
+                socket.send("HTTP/1.1 200 OK\r\n\r\n");
+                break;
 
-        default:
-            assert(0);
+            case Method.HEAD:
+                socket.send("HTTP/1.1 200 OK\r\n\r\n");
+                break;
+
+            default:
+                assert(0);
+            }
+
+            socket.shutdown(SocketShutdown.BOTH);
+            socket.close();
         }
-
-        socket.shutdown(SocketShutdown.BOTH);
-        socket.close();
+        catch (Throwable e)
+        {
+            app.onError(e);
+        }
     }
 }
