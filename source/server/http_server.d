@@ -28,7 +28,9 @@ class HttpServer
         {
             try
             {
-                worker(socket.accept());
+                spawn(function(shared Socket client_socket) {
+                    onConnect(cast(Socket) client_socket);
+                }, cast(shared) socket.accept());
             }
             catch (Throwable e)
             {
@@ -37,10 +39,9 @@ class HttpServer
         }
     }
 
-    private void worker(Socket socket)
+    private static void onConnect(Socket socket)
     {
         auto request = Request.parse(new SocketStream(socket));
-        request.writeln();
 
         switch (request.method)
         {
