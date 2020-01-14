@@ -1,11 +1,22 @@
 import std.stdio;
-import std.format;
 import http;
 import server;
 import application;
+import routers;
 
 shared class SimpleApplication : Application
 {
+    private Router _router;
+
+    this() shared
+    {
+        _router = new shared(Router)();
+
+        _router.get("/", (req, res) {
+            res.body = "Hello";
+        });
+    }
+
     void onListened(ushort port)
     {
         writef("server listening at port %d...\n", port);
@@ -15,26 +26,7 @@ shared class SimpleApplication : Application
     {
         writef("Request: %s %s %s\n", req.method, req.requestUri, req.httpVersion);
 
-        switch (req.method)
-        {
-        case Method.GET:
-            switch (req.requestUri.path)
-            {
-            case "/":
-                res.body = "hello";
-                return;
-
-            default:
-                break;
-            }
-            goto default;
-
-        default:
-            res.status = HttpStatus.NOT_FOUND;
-            res.body = format("%s %s %d %s", req.method, req.requestUri,
-                    cast(int) res.status, res.status.text);
-            break;
-        }
+        _router.handleRequest(req, res);
     }
 
     void onError(Throwable e)
@@ -45,5 +37,5 @@ shared class SimpleApplication : Application
 
 void main()
 {
-    new HttpServer(new SimpleApplication()).listen(3000);
+    new HttpServer(new shared(SimpleApplication)()).listen(3001);
 }
