@@ -3,6 +3,7 @@ import http;
 import server;
 import application;
 import routers;
+import renderers;
 
 shared class SimpleApplication : Application
 {
@@ -12,9 +13,7 @@ shared class SimpleApplication : Application
     {
         _router = new shared(Router)();
 
-        _router.get("/", (req, res) {
-            res.body = "Hello";
-        });
+        _router.get("/", (req, res) => render_file(req, res, "./static/index.html"));
     }
 
     void onListened(ushort port)
@@ -37,5 +36,5 @@ shared class SimpleApplication : Application
 
 void main()
 {
-    new HttpServer(new shared(SimpleApplication)()).listen(3001);
+    new HttpServer(new shared(SimpleApplication)()).listen(3000);
 }
