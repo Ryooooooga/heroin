@@ -11,6 +11,14 @@ class Response
     string[string] headers;
     string body;
 
+    this()
+    {
+        httpVersion = HttpVersions.HTTP_1_1;
+        status = HttpStatus.OK;
+        headers["Content-Type"] = "text/html; charset=utf-8";
+        body = "";
+    }
+
     override string toString()
     {
         OutBuffer buf = new OutBuffer();

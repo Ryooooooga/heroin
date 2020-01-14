@@ -46,22 +46,11 @@ class HttpServer
         try
         {
             auto request = Request.parse(new SocketStream(socket));
+            auto response = new Response();
 
-            app.onConnected(request);
+            app.onConnected(request, response);
 
-            switch (request.method)
-            {
-            case Method.GET:
-                socket.send("HTTP/1.1 200 OK\r\n\r\n");
-                break;
-
-            case Method.HEAD:
-                socket.send("HTTP/1.1 200 OK\r\n\r\n");
-                break;
-
-            default:
-                assert(0);
-            }
+            socket.send(response.toString());
 
             socket.shutdown(SocketShutdown.BOTH);
             socket.close();

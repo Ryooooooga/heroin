@@ -10,9 +10,11 @@ shared class SimpleApplication : Application
         writef("server listening at port %d...\n", port);
     }
 
-    void onConnected(Request req)
+    void onConnected(Request req, Response res)
     {
         writef("Request: %s %s %s\n", req.method, req.requestUri, req.httpVersion);
+
+        res.body = "Hello!";
     }
 
     void onError(Throwable e)
