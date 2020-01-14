@@ -20,14 +20,14 @@ enum HttpVersion
     HTTP_1_1 = "HTTP/1.1",
 }
 
-struct Request
+class Request
 {
     private InputStream _stream;
     private string _body;
 
     string method;
-    string request_uri;
-    string http_version;
+    string requestUri;
+    string httpVersion;
     string[string] headers;
 
     static Request parse(string text)
@@ -37,21 +37,21 @@ struct Request
 
     static Request parse(InputStream stream)
     {
-        Request req;
+        Request req = new Request();
         req._stream = stream;
 
         // request-line
         req.method = stream.readln(" ").strip;
-        req.request_uri = stream.readln(" ").strip;
-        req.http_version = stream.readln("\r\n").strip;
+        req.requestUri = stream.readln(" ").strip;
+        req.httpVersion = stream.readln("\r\n").strip;
 
         // *(header)
         string line;
         while ((line = stream.readln("\r\n")) != "\r\n")
         {
-            const key_value = line.findSplit(":").enforce("missing ':' in a meassage-header");
+            const keyValue = line.findSplit(":").enforce("missing ':' in a meassage-header");
 
-            req.headers[key_value[0]] = key_value[2].strip;
+            req.headers[keyValue[0]] = keyValue[2].strip;
         }
 
         return req;
@@ -73,8 +73,8 @@ struct Request
                 "GET / HTTP/1.1\r\nHost: example.com\r\nUser-Agent: unittest \r\n\r\nbody\r\n");
 
         assert(req.method == Method.GET);
-        assert(req.request_uri == "/");
-        assert(req.http_version == HttpVersion.HTTP_1_1);
+        assert(req.requestUri == "/");
+        assert(req.httpVersion == HttpVersion.HTTP_1_1);
 
         assert(req.headers == [
                 "Host": "example.com",

@@ -12,7 +12,7 @@ shared class SimpleApplication : Application
 
     void onConnected(Request req)
     {
-        req.writeln;
+        writef("Request: %s %s %s\n", req.method, req.requestUri, req.httpVersion);
     }
 
     void onError(Throwable e)

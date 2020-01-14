@@ -70,21 +70,21 @@ abstract class InputStream
 class MemoryStream : InputStream
 {
     private string _data;
-    private size_t _cursor_read;
+    private size_t _cursorRead;
 
     this(string data)
     {
         _data = data;
-        _cursor_read = 0;
+        _cursorRead = 0;
     }
 
     protected override ptrdiff_t readBlock(char[] buffer)
     {
-        const rest = _data.length - _cursor_read;
-        const size_read = min(buffer.length, rest);
+        const rest = _data.length - _cursorRead;
+        const sizeRead = min(buffer.length, rest);
 
-        _data[_cursor_read .. _cursor_read + size_read].copy(buffer);
-        _cursor_read += size_read;
-        return size_read;
+        _data[_cursorRead .. _cursorRead + sizeRead].copy(buffer);
+        _cursorRead += sizeRead;
+        return sizeRead;
     }
 }

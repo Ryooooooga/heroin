@@ -1,4 +1,4 @@
-module socket_stream;
+module socketstream;
 
 import std.socket;
 import stream;

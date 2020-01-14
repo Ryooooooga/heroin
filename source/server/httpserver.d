@@ -1,11 +1,11 @@
-module http_server;
+module httpserver;
 
 import std.concurrency;
 import std.socket;
 import std.string;
 import std.algorithm.searching;
 import http;
-import socket_stream;
+import socketstream;
 import application;
 
 class HttpServer
@@ -46,6 +46,7 @@ class HttpServer
         try
         {
             auto request = Request.parse(new SocketStream(socket));
+
             app.onConnected(request);
 
             switch (request.method)
