@@ -4,5 +4,7 @@
   "authors": ["Ryooooooga <ryoga_314@yahoo.co.jp>"],
   "copyright": "Copyright © 2020, Ryooooooga",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "dmarkdown": "*"
+  }
 }

@@ -1,4 +1,7 @@
+import std.algorithm;
 import std.stdio;
+import std.path;
+import std.format;
 import http;
 import server;
 import application;
@@ -13,9 +16,23 @@ shared class SimpleApplication : Application
     {
         _router = new shared(Router)();
 
-        _router.get("/", (req, res) => render_file(req, res, "./static/index.html"));
-        _router.get("/app.js", (req, res) => render_file(req, res, "./static/app.js"));
-        _router.get("/articles.json", (req, res) => render_file(req, res, "./static/articles.json"));
+        auto article_files = [
+            "./static/01-test.md", "./static/02-also-test.md",
+        ];
+
+        // Static resources
+        _router.get("/", render_file("./static/index.html"));
+        _router.get("/app.js", render_file("./static/app.js"));
+
+        foreach(file; article_files)
+        {
+            const uri = format("/%s", file.baseName.stripExtension);
+
+            _router.get(uri, render_md(file));
+        }
+
+        // JSON API
+        _router.get("/articles.json", render_file("./static/articles.json"));
     }
 
     void onListened(ushort port)

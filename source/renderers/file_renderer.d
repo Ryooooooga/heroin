@@ -3,6 +3,7 @@ module file_renderer;
 import std.file;
 import std.path;
 import std.exception;
+import routers;
 import request;
 import response;
 import httpstatus;
@@ -19,27 +20,29 @@ pure shared static this()
     ];
 }
 
-void render_file(Request req, Response res, string file, string contentType = null)
+RequestHandlerDelegate render_file(string file, string contentType = null)
 {
-    try
-    {
-        if (contentType is null)
+    return (req, res) {
+        try
         {
-            const estimatedContentType = file.extension in knownContentTypes;
-            if (estimatedContentType)
+            if (contentType is null)
             {
-                contentType = *estimatedContentType;
+                const estimatedContentType = file.extension in knownContentTypes;
+                if (estimatedContentType)
+                {
+                    contentType = *estimatedContentType;
+                }
             }
+
+            const content = cast(string) read(file);
+
+            res.headers["Content-Type"] = contentType;
+            res.body = content;
         }
-
-        const content = cast(string) read(file);
-
-        res.headers["Content-Type"] = contentType;
-        res.body = content;
-    }
-    catch (FileException e)
-    {
-        res.status = HttpStatus.NOT_FOUND;
-        res.body = e.toString();
-    }
+        catch (FileException e)
+        {
+            res.status = HttpStatus.NOT_FOUND;
+            res.body = e.toString();
+        }
+    };
 }
