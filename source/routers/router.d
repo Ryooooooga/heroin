@@ -20,6 +20,11 @@ shared class Router : RequestHandler
         _handlers[Method.GET][uri] = handler;
     }
 
+    void get_alias(string alias_, string as_)
+    {
+        _handlers[Method.GET][alias_] = _handlers[Method.GET][as_];
+    }
+
     void handleRequest(Request req, Response res)
     {
         auto method_handlers = req.method in _handlers;

@@ -15,7 +15,8 @@ RequestHandlerDelegate render_md(string file)
         try
         {
             const markdown = readText(file);
-            const content = markdown.filterMarkdown(MarkdownFlags.githubInspired | MarkdownFlags.noInlineHtml);
+            const content = markdown.filterMarkdown(
+                    MarkdownFlags.githubInspired | MarkdownFlags.noInlineHtml);
 
             res.headers["Content-Type"] = "text/html; charset=utf-8";
             res.body = content;

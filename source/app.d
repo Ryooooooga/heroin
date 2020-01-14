@@ -1,7 +1,11 @@
 import std.algorithm;
+import std.array;
+import std.conv;
 import std.stdio;
+import std.file;
 import std.path;
 import std.format;
+import std.json;
 import http;
 import server;
 import application;
@@ -16,23 +20,40 @@ shared class SimpleApplication : Application
     {
         _router = new shared(Router)();
 
-        auto article_files = [
-            "./static/01-test.md", "./static/02-also-test.md",
-        ];
-
         // Static resources
-        _router.get("/", render_file("./static/index.html"));
-        _router.get("/app.js", render_file("./static/app.js"));
+        serveStatic("/", "./static", "*");
+        _router.get_alias("/", "/index.html");
 
-        foreach(file; article_files)
+        // Articles
+        servePosts("/", "./posts");
+    }
+
+    void serveStatic(string root, string path, string pattern)
+    {
+        const absPath = path.asAbsolutePath.to!string;
+        auto files = absPath.dirEntries(pattern, SpanMode.depth).filter!"a.isFile";
+
+        foreach (dirEntry; files)
         {
-            const uri = format("/%s", file.baseName.stripExtension);
+            const relative = relativePath(dirEntry.name, absPath);
+            const uri = buildNormalizedPath(root, relative);
 
-            _router.get(uri, render_md(file));
+            _router.get(uri, render_file(dirEntry.name));
         }
+    }
 
-        // JSON API
-        _router.get("/articles.json", render_file("./static/articles.json"));
+    void servePosts(string root, string path)
+    {
+        const absPath = path.asAbsolutePath.to!string;
+        auto files = absPath.dirEntries("*.md", SpanMode.depth).filter!"a.isFile";
+
+        foreach (dirEntry; files)
+        {
+            const relative = relativePath(dirEntry.name, absPath);
+            const uri = buildNormalizedPath(root, relative.stripExtension);
+
+            _router.get(uri, render_md(dirEntry.name));
+        }
     }
 
     void onListened(ushort port)
