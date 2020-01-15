@@ -13,23 +13,22 @@ abstract class InputStream
         return _eof;
     }
 
-    string readAll()
+    string read(size_t max_size)
     {
-        string all = _lookahead.idup;
+        char[] buffer = new char[max_size - _lookahead.length];
+
+        string data = _lookahead.idup;
         _lookahead = [];
 
-        while (true)
+        const len = readBlock(buffer);
+
+        if (len <= 0)
         {
-            char[1024] buffer;
-            const len = readBlock(buffer);
-
-            if (len <= 0)
-            {
-                return all;
-            }
-
-            all ~= buffer[0 .. len];
+            return data;
         }
+
+        data ~= buffer[0 .. len];
+        return data;
     }
 
     string readln(string delimitor = "\r\n")

@@ -6,15 +6,67 @@ import std.file;
 import std.path;
 import std.format;
 import std.json;
+import std.datetime;
+import std.string;
 import http;
 import server;
 import application;
 import routers;
 import renderers;
 
+synchronized class Post
+{
+    private static long _next_id = 1;
+
+    private long _id;
+    private string _author;
+    private string _text;
+    private DateTime _createdAt;
+
+    this(string author, string text, DateTime createdAt = cast(DateTime) Clock.currTime(UTC())) shared
+    {
+        _id = _next_id++;
+        _author = author;
+        _text = text;
+        // _createdAt = createdAt;
+    }
+
+    @property long id() const
+    {
+        return _id;
+    }
+
+    @property string author() const
+    {
+        return _author;
+    }
+
+    @property string text() const
+    {
+        return _text;
+    }
+
+    @property DateTime createdAt() const
+    {
+        return _createdAt;
+    }
+}
+
 shared class SimpleApplication : Application
 {
     private Router _router;
+
+    private Post[] _posts;
+
+    @property JSONValue posts()
+    {
+        return JSONValue(_posts.map!(post => JSONValue([
+                    "id": JSONValue(post.id),
+                    "author": JSONValue(post.author),
+                    "text": JSONValue(post.text),
+                    "createdAt": JSONValue(post.createdAt.toISOExtString()),
+                ])).array);
+    }
 
     this() shared
     {
@@ -24,7 +76,33 @@ shared class SimpleApplication : Application
         serveStatic("/", "./static", "*");
         _router.get_alias("/", "/index.html");
 
-        _router.get("/posts", render_file("./static/posts.json"));
+        // JSON APIs
+        _router.get("/posts", (req, res) {
+            res.status = HttpStatus.OK;
+            res.headers["Content-Type"] = "application/json; charset=utf-8";
+            res.body = posts.toString();
+        });
+
+        _router.post("/posts", (req, res) {
+            const json = parseJSON(req.body);
+            const author = json["author"].str.strip;
+            const text = json["text"].str.strip;
+            const createdAt = cast(DateTime)Clock.currTime(UTC());
+
+            if (author.length == 0 || 32 < author.length || text.length == 0 || 1024 < text.length) {
+                res.status = HttpStatus.BAD_REQUEST;
+                res.body = "{\"error\": \"POST /posts error\"}";
+                return;
+            }
+
+            auto post = new shared(Post)(author, text, createdAt);
+
+            _posts ~= post;
+
+            res.status = HttpStatus.CREATED;
+            res.headers["Content-Type"] = "application/json; charset=utf-8";
+            res.body = posts.toString();
+        });
     }
 
     void serveStatic(string root, string path, string pattern)

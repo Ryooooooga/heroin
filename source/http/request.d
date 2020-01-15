@@ -2,6 +2,7 @@ module request;
 
 import std.algorithm;
 import std.array;
+import std.conv;
 import std.exception;
 import std.string;
 import stream;
@@ -56,12 +57,12 @@ class Request
 
     string body()
     {
-        if (_body)
+        if (_body !is null)
         {
             return _body;
         }
 
-        return _body = _stream.readAll();
+        return _body = _stream.read(headers["Content-Length"].to!size_t);
     }
 
     unittest

@@ -25,6 +25,16 @@ shared class Router : RequestHandler
         _handlers[Method.GET][alias_] = _handlers[Method.GET][as_];
     }
 
+    void post(string uri, RequestHandlerDelegate handler)
+    {
+        post(uri, new shared(DelegateRequestHandler)(handler));
+    }
+
+    void post(string uri, shared RequestHandler handler)
+    {
+        _handlers[Method.POST][uri] = handler;
+    }
+
     void handleRequest(Request req, Response res)
     {
         auto method_handlers = req.method in _handlers;
