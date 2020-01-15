@@ -17,8 +17,10 @@ const app = new Vue({
           text: this.text
         })
       });
-      const posts = await res.json();
-      this.posts = posts;
+      if (res.ok) {
+        const posts = await res.json();
+        this.posts = posts;
+      }
     }
   },
   template: `
@@ -45,7 +47,9 @@ const app = new Vue({
     `,
   async mounted() {
     const res = await fetch("/posts");
-    const posts = await res.json();
-    this.posts = posts;
+    if (res.ok) {
+      const posts = await res.json();
+      this.posts = posts;
+    }
   }
 });

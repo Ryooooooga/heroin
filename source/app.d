@@ -16,8 +16,6 @@ import renderers;
 
 synchronized class Post
 {
-    private static long _next_id = 1;
-
     private long _id;
     private string _author;
     private string _text;
@@ -25,10 +23,10 @@ synchronized class Post
 
     this(string author, string text, DateTime createdAt = cast(DateTime) Clock.currTime(UTC())) shared
     {
-        _id = _next_id++;
+        _id = 0;
         _author = author;
         _text = text;
-        // _createdAt = createdAt;
+        _createdAt = createdAt;
     }
 
     @property long id() const
