@@ -17,9 +17,12 @@ const app = new Vue({
           text: this.text
         })
       });
+
       if (res.ok) {
         const posts = await res.json();
         this.posts = posts;
+        this.author = "";
+        this.text = "";
       }
     }
   },
@@ -40,7 +43,8 @@ const app = new Vue({
       <p v-if="posts === null">Loading...</p>
       <ul v-else>
         <li v-for="post in posts">
-          {{post.id}}: {{post.text}} by {{post.author}} at {{post.createdAt}}
+          <p>{{post.id}}: {{post.author}} at {{post.createdAt}}</p>
+          <p v-html="post.htmlText"></p>
         </li>
       </ul>
     </div>

@@ -8,6 +8,7 @@ import std.format;
 import std.json;
 import std.datetime;
 import std.string;
+import dmarkdown;
 import http;
 import server;
 import application;
@@ -18,14 +19,16 @@ synchronized class Post
 {
     private long _id;
     private string _author;
-    private string _text;
+    private string _markdownText;
+    private string _htmlText;
     private DateTime _createdAt;
 
-    this(string author, string text, DateTime createdAt = cast(DateTime) Clock.currTime(UTC())) shared
+    this(string author, string markdownText, string htmlText, DateTime createdAt = cast(DateTime) Clock.currTime(UTC())) shared
     {
         _id = 0;
         _author = author;
-        _text = text;
+        _markdownText = markdownText;
+        _htmlText = htmlText;
         _createdAt = createdAt;
     }
 
@@ -39,9 +42,14 @@ synchronized class Post
         return _author;
     }
 
-    @property string text() const
+    @property string markdownText() const
     {
-        return _text;
+        return _markdownText;
+    }
+
+    @property string htmlText() const
+    {
+        return _htmlText;
     }
 
     @property DateTime createdAt() const
@@ -50,21 +58,58 @@ synchronized class Post
     }
 }
 
-shared class SimpleApplication : Application
+shared class PostController
 {
-    private Router _router;
-
     private Post[] _posts;
 
-    @property JSONValue posts()
+    // GET /posts
+    void onGetPosts(Request req, Response res)
+    {
+        res.status = HttpStatus.OK;
+        res.headers["Content-Type"] = "application/json; charset=utf-8";
+        res.body = posts.toString();
+    }
+
+    // POST /posts
+    void onPostPosts(Request req, Response res)
+    {
+        const json = parseJSON(req.body);
+        const author = json["author"].str.strip;
+        const markdownText = json["text"].str.strip;
+        const markdownFlags = MarkdownFlags.githubInspired | MarkdownFlags.noInlineHtml | MarkdownFlags.keepLineBreaks;
+        const htmlText = filterMarkdown(markdownText, markdownFlags);
+        const createdAt = cast(DateTime)Clock.currTime(UTC());
+
+        if (author.length == 0 || 32 < author.length || markdownText.length == 0 || 1024 < markdownText.length) {
+            res.status = HttpStatus.BAD_REQUEST;
+            res.body = "{\"error\": \"POST /posts error\"}";
+            return;
+        }
+
+        auto post = new shared(Post)(author, markdownText, htmlText, createdAt);
+
+        _posts ~= post;
+
+        res.status = HttpStatus.CREATED;
+        res.headers["Content-Type"] = "application/json; charset=utf-8";
+        res.body = posts.toString();
+    }
+
+    private @property JSONValue posts()
     {
         return JSONValue(_posts.map!(post => JSONValue([
                     "id": JSONValue(post.id),
                     "author": JSONValue(post.author),
-                    "text": JSONValue(post.text),
+                    "markdownText": JSONValue(post.markdownText),
+                    "htmlText": JSONValue(post.htmlText),
                     "createdAt": JSONValue(post.createdAt.toISOExtString()),
                 ])).array);
     }
+}
+
+shared class SimpleApplication : Application
+{
+    private Router _router;
 
     this() shared
     {
@@ -75,32 +120,9 @@ shared class SimpleApplication : Application
         _router.get_alias("/", "/index.html");
 
         // JSON APIs
-        _router.get("/posts", (req, res) {
-            res.status = HttpStatus.OK;
-            res.headers["Content-Type"] = "application/json; charset=utf-8";
-            res.body = posts.toString();
-        });
-
-        _router.post("/posts", (req, res) {
-            const json = parseJSON(req.body);
-            const author = json["author"].str.strip;
-            const text = json["text"].str.strip;
-            const createdAt = cast(DateTime)Clock.currTime(UTC());
-
-            if (author.length == 0 || 32 < author.length || text.length == 0 || 1024 < text.length) {
-                res.status = HttpStatus.BAD_REQUEST;
-                res.body = "{\"error\": \"POST /posts error\"}";
-                return;
-            }
-
-            auto post = new shared(Post)(author, text, createdAt);
-
-            _posts ~= post;
-
-            res.status = HttpStatus.CREATED;
-            res.headers["Content-Type"] = "application/json; charset=utf-8";
-            res.body = posts.toString();
-        });
+        auto postController = new shared(PostController)();
+        _router.get("/posts", (req, res) => postController.onGetPosts(req, res));
+        _router.post("/posts", (req, res) => postController.onPostPosts(req, res));
     }
 
     void serveStatic(string root, string path, string pattern)
