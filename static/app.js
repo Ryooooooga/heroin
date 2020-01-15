@@ -1,10 +1,18 @@
-const app = new Vue({
-  el: "#main",
-  data: {
-    posts: null,
-    author: "",
+const store = {
+  posts: null
+};
+
+const Title = {
+  template: `
+    <h1>Sample Application</h1>
+  `
+};
+
+const Form = {
+  data: () => ({
+    author: "noname",
     text: ""
-  },
+  }),
   methods: {
     async submit() {
       const res = await fetch("/posts", {
@@ -19,16 +27,13 @@ const app = new Vue({
       });
 
       if (res.ok) {
-        const posts = await res.json();
-        this.posts = posts;
-        this.author = "";
         this.text = "";
+        store.posts = await res.json();
       }
     }
   },
   template: `
     <div>
-      <h2>Posts</h2>
       <form @submit.prevent="submit">
         <div>
           <input name="author" type="text" v-model="author">
@@ -40,15 +45,52 @@ const app = new Vue({
           <button type="submit">Send</button>
         </div>
       </form>
-      <p v-if="posts === null">Loading...</p>
-      <ul v-else>
-        <li v-for="post in posts">
-          <p>{{post.id}}: {{post.author}} at {{post.createdAt}}</p>
-          <p v-html="post.htmlText"></p>
-        </li>
-      </ul>
     </div>
-    `,
+  `
+};
+
+const Loading = {
+  template: `
+    <p>Loading...</p>
+  `
+};
+
+const Posts = {
+  props: {
+    posts: Array
+  },
+  template: `
+    <ul>
+      <li v-for="post in posts">
+        <p>{{post.id}}: {{post.author}} at {{post.createdAt}}</p>
+        <p v-html="post.htmlText"></p>
+      </li>
+    </ul>
+  `
+};
+
+const app = new Vue({
+  el: "#main",
+  components: {
+    Title,
+    Form,
+    Loading,
+    Posts
+  },
+  data: store,
+  computed: {
+    isLoading() {
+      return this.posts === null;
+    }
+  },
+  template: `
+    <main>
+      <Title />
+      <Form />
+      <Loading v-if="isLoading" />
+      <Posts v-else :posts="posts" />
+    </main>
+  `,
   async mounted() {
     const res = await fetch("/posts");
     if (res.ok) {
