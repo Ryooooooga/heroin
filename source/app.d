@@ -23,7 +23,8 @@ synchronized class Post
     private string _htmlText;
     private DateTime _createdAt;
 
-    this(string author, string markdownText, string htmlText, DateTime createdAt = cast(DateTime) Clock.currTime(UTC())) shared
+    this(string author, string markdownText, string htmlText,
+            DateTime createdAt = cast(DateTime) Clock.currTime(UTC())) shared
     {
         _id = 0;
         _author = author;
@@ -76,11 +77,14 @@ shared class PostController
         const json = parseJSON(req.body);
         const author = json["author"].str.strip;
         const markdownText = json["text"].str.strip;
-        const markdownFlags = MarkdownFlags.githubInspired | MarkdownFlags.noInlineHtml | MarkdownFlags.keepLineBreaks;
+        const markdownFlags = MarkdownFlags.githubInspired
+            | MarkdownFlags.noInlineHtml | MarkdownFlags.keepLineBreaks;
         const htmlText = filterMarkdown(markdownText, markdownFlags);
-        const createdAt = cast(DateTime)Clock.currTime(UTC());
+        const createdAt = cast(DateTime) Clock.currTime(UTC());
 
-        if (author.length == 0 || 32 < author.length || markdownText.length == 0 || 1024 < markdownText.length) {
+        if (author.length == 0 || 32 < author.length || markdownText.length == 0
+                || 1024 < markdownText.length)
+        {
             res.status = HttpStatus.BAD_REQUEST;
             res.body = "{\"error\": \"POST /posts error\"}";
             return;

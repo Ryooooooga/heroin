@@ -68,7 +68,7 @@ class Request
     unittest
     {
         auto req = Request.parse(
-                "GET / HTTP/1.1\r\nHost: example.com\r\nUser-Agent: unittest \r\n\r\nbody\r\n");
+                "GET / HTTP/1.1\r\nHost: example.com\r\nUser-Agent: unittest \r\nContent-Length: 6\r\n\r\nbody\r\n");
 
         assert(req.method == Method.GET);
         assert(req.requestUri.text == "/");
@@ -77,6 +77,7 @@ class Request
         assert(req.headers == [
                 "Host": "example.com",
                 "User-Agent": "unittest",
+                "Content-Length": "6",
                 ]);
 
         assert(req.body == "body\r\n");
