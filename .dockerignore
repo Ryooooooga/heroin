@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/heroin
+heroin.so
+heroin.dylib
+heroin.dll
+heroin.a
+heroin.lib
+heroin-test-*
+*.exe
+*.o
+*.obj
+*.lst
