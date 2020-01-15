@@ -24,8 +24,7 @@ shared class SimpleApplication : Application
         serveStatic("/", "./static", "*");
         _router.get_alias("/", "/index.html");
 
-        // Articles
-        servePosts("/", "./posts");
+        _router.get("/posts", render_file("./static/posts.json"));
     }
 
     void serveStatic(string root, string path, string pattern)
@@ -39,20 +38,6 @@ shared class SimpleApplication : Application
             const uri = buildNormalizedPath(root, relative);
 
             _router.get(uri, render_file(dirEntry.name));
-        }
-    }
-
-    void servePosts(string root, string path)
-    {
-        const absPath = path.asAbsolutePath.to!string;
-        auto files = absPath.dirEntries("*.md", SpanMode.depth).filter!"a.isFile";
-
-        foreach (dirEntry; files)
-        {
-            const relative = relativePath(dirEntry.name, absPath);
-            const uri = buildNormalizedPath(root, relative.stripExtension);
-
-            _router.get(uri, render_md(dirEntry.name));
         }
     }
 

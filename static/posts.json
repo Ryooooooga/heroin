@@ -1,0 +1,8 @@
+[
+  { "id": 1, "author": "Test user", "text": "Hello, world!" },
+  {
+    "id": 2,
+    "author": "<script>alert('test2')</script>",
+    "text": "<script>alert('test2')</script>"
+  }
+]
