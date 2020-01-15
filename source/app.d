@@ -80,7 +80,7 @@ shared class PostController
         const markdownFlags = MarkdownFlags.githubInspired
             | MarkdownFlags.noInlineHtml | MarkdownFlags.keepLineBreaks;
         const htmlText = filterMarkdown(markdownText, markdownFlags);
-        const createdAt = cast(DateTime) Clock.currTime(UTC());
+        const createdAt = cast(DateTime) Clock.currTime();
 
         if (author.length == 0 || 32 < author.length || markdownText.length == 0
                 || 1024 < markdownText.length)

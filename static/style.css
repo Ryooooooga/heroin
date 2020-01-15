@@ -1,4 +1,81 @@
+:root {
+  --base: #4d4d4d;
+  --base-dark: #424242;
+  --main: #dddddd;
+  --main-dark: #c0c0c0;
+  --accent: rgb(60, 240, 100);
+  --button: rgb(87, 175, 240);
+  --button-border: rgb(104, 210, 255);
+}
+
+html {
+  font-family: "Lato", "游ゴシック Medium", "游ゴシック体", "Yu Gothic Medium",
+    YuGothic, "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ",
+    Meiryo, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
+}
+body {
+  color: var(--main);
+  background: var(--base);
+}
+
 main {
-    max-width: 60rem;
-    margin: 0px auto;
+  max-width: 40rem;
+  margin: 0px auto;
+  padding: 0px 1rem;
+}
+
+.form {
+  margin: 1rem auto;
+  padding: 0.5rem 1rem;
+  background: var(--base-dark);
+  border-left: solid 4px var(--accent);
+}
+.form__label {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+.form__input,
+.form__textarea {
+  width: 100%;
+  padding: 0.25rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 150%;
+  border-radius: 0.5rem;
+  border: none;
+}
+.form__textarea {
+  resize: vertical;
+  height: 6rem;
+}
+.form__submit {
+  padding: 0.5em 1.2em;
+  color: #ffffff;
+  background-color: var(--button);
+  font-size: 1em;
+  font-weight: bolder;
+  border: solid 1px var(--button-border);
+  border-radius: 0.25em;
+}
+
+.post {
+  margin: 1rem auto;
+  padding: 0.5rem 1rem;
+  background: var(--base-dark);
+  border-left: solid 4px var(--accent);
+}
+.post__header {
+  color: var(--main-dark);
+  border-bottom: solid 1px var(--accent);
+}
+.post__id {
+  font-weight: bolder;
+}
+.post__author {
+  font-weight: bolder;
+}
+.post__footer {
+  color: var(--main-dark);
+  text-align: end;
 }

@@ -33,17 +33,13 @@ const Form = {
     }
   },
   template: `
-    <div>
+    <div class="form">
       <form @submit.prevent="submit">
-        <div>
-          <input name="author" type="text" v-model="author">
-        </div>
-        <div>
-          <textarea name="text" v-model="text"></textarea>
-        </div>
-        <div>
-          <button type="submit">Send</button>
-        </div>
+        <label class="form__label">Name</label>
+        <input class="form__input" name="author" type="text" v-model="author">
+        <label class="form__label">Text</label>
+        <textarea class="form__textarea" name="text" v-model="text"></textarea>
+        <button class="form__submit" type="submit">Send</button>
       </form>
     </div>
   `
@@ -60,12 +56,18 @@ const Posts = {
     posts: Array
   },
   template: `
-    <ul>
-      <li v-for="post in posts">
-        <p>{{post.id}}: {{post.author}} at {{post.createdAt}}</p>
-        <p v-html="post.htmlText"></p>
-      </li>
-    </ul>
+    <div>
+      <section class="post" v-for="post in posts">
+        <div class="post__header">
+          <span class="post__id">{{post.id}}</span>:
+          <span class="post__author">{{post.author}}</span>
+        </div>
+        <div class="post__body" v-html="post.htmlText"></div>
+        <div class="post__footer">
+          <span class="post__timestamp">{{new Date(post.createdAt).toLocaleString()}}</span>
+        </div>
+      </section>
+    </div>
   `
 };
 
