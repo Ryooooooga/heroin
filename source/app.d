@@ -15,99 +15,94 @@ import application;
 import routers;
 import renderers;
 
-synchronized class Post
+class Post
 {
-    private long _id;
-    private string _author;
-    private string _markdownText;
-    private string _htmlText;
-    private DateTime _createdAt;
+    long id;
+    string author;
+    string markdownText;
+    string htmlText;
+    DateTime createdAt;
 
-    this(string author, string markdownText, string htmlText,
-            DateTime createdAt = cast(DateTime) Clock.currTime(UTC())) shared
+    this(string author, string markdownText, string htmlText)
     {
-        _id = 0;
-        _author = author;
-        _markdownText = markdownText;
-        _htmlText = htmlText;
-        _createdAt = createdAt;
-    }
-
-    @property long id() const
-    {
-        return _id;
-    }
-
-    @property string author() const
-    {
-        return _author;
-    }
-
-    @property string markdownText() const
-    {
-        return _markdownText;
-    }
-
-    @property string htmlText() const
-    {
-        return _htmlText;
-    }
-
-    @property DateTime createdAt() const
-    {
-        return _createdAt;
+        this.id = 0;
+        this.author = author;
+        this.markdownText = markdownText;
+        this.htmlText = htmlText;
+        this.createdAt = DateTime();
     }
 }
 
-shared class PostController
+JSONValue toJSON(Post post)
 {
-    private Post[] _posts;
+    return JSONValue([
+        "id": JSONValue(post.id),
+        "author": JSONValue(post.author),
+        "markdownText": JSONValue(post.markdownText),
+        "htmlText": JSONValue(post.htmlText),
+        "createdAt": JSONValue(post.createdAt.toISOExtString()),
+    ]);
+}
+
+JSONValue toJSON(Post[] posts)
+{
+    return JSONValue(posts.map!(post => post.toJSON()).array);
+}
+
+interface Model(T) {
+    T[] all();
+    void insert(T x);
+}
+
+class PostController
+{
+    Model!Post _model;
+
+    this(shared Model!Post model) shared
+    {
+        _model = model;
+    }
 
     // GET /posts
-    void onGetPosts(Request req, Response res)
+    void onGetPosts(Request req, Response res) shared
     {
-        res.status = HttpStatus.OK;
-        res.headers["Content-Type"] = "application/json; charset=utf-8";
-        res.body = posts.toString();
+        synchronized(_model) {
+            auto model = cast(Model!Post)_model;
+
+            res.status = HttpStatus.OK;
+            res.headers["Content-Type"] = "application/json; charset=utf-8";
+            res.body = model.all().toJSON().toString();
+        }
     }
 
     // POST /posts
-    void onPostPosts(Request req, Response res)
+    void onPostPosts(Request req, Response res) shared
     {
-        const json = parseJSON(req.body);
-        const author = json["author"].str.strip;
-        const markdownText = json["text"].str.strip;
-        const markdownFlags = MarkdownFlags.githubInspired
-            | MarkdownFlags.noInlineHtml | MarkdownFlags.keepLineBreaks;
-        const htmlText = filterMarkdown(markdownText, markdownFlags);
-        const createdAt = cast(DateTime) Clock.currTime();
+        synchronized(_model) {
+            auto model = cast(Model!Post)_model;
 
-        if (author.length == 0 || 32 < author.length || markdownText.length == 0
-                || 1024 < markdownText.length)
-        {
-            res.status = HttpStatus.BAD_REQUEST;
-            res.body = "{\"error\": \"POST /posts error\"}";
-            return;
+            const json = parseJSON(req.body);
+            const author = json["author"].str.strip;
+            const markdownText = json["text"].str.strip;
+            const markdownFlags = MarkdownFlags.githubInspired
+                | MarkdownFlags.noInlineHtml | MarkdownFlags.keepLineBreaks;
+            const htmlText = filterMarkdown(markdownText, markdownFlags);
+
+            if (author.length == 0 || 32 < author.length || markdownText.length == 0
+                    || 1024 < markdownText.length)
+            {
+                res.status = HttpStatus.BAD_REQUEST;
+                res.body = "{\"error\": \"POST /posts error\"}";
+                return;
+            }
+
+            auto post = new Post(author, markdownText, htmlText);
+            model.insert(post);
+
+            res.status = HttpStatus.CREATED;
+            res.headers["Content-Type"] = "application/json; charset=utf-8";
+            res.body = model.all().toJSON().toString();
         }
-
-        auto post = new shared(Post)(author, markdownText, htmlText, createdAt);
-
-        _posts ~= post;
-
-        res.status = HttpStatus.CREATED;
-        res.headers["Content-Type"] = "application/json; charset=utf-8";
-        res.body = posts.toString();
-    }
-
-    private @property JSONValue posts()
-    {
-        return JSONValue(_posts.map!(post => JSONValue([
-                    "id": JSONValue(post.id),
-                    "author": JSONValue(post.author),
-                    "markdownText": JSONValue(post.markdownText),
-                    "htmlText": JSONValue(post.htmlText),
-                    "createdAt": JSONValue(post.createdAt.toISOExtString()),
-                ])).array);
     }
 }
 
@@ -125,7 +120,7 @@ void serveStatic(Router router, string root, string path, string pattern)
     }
 }
 
-shared class SimpleApplication : Application
+class SimpleApplication : Application
 {
     private Router _router;
 
@@ -138,26 +133,27 @@ shared class SimpleApplication : Application
         router.forwardGet("/", "/index.html");
 
         // JSON APIs
-        auto postController = new shared(PostController)();
+        shared Model!Post model = null;
+        auto postController = new shared(PostController)(model);
         router.get("/posts", (req, res) => postController.onGetPosts(req, res));
         router.post("/posts", (req, res) => postController.onPostPosts(req, res));
 
-        _router = cast(shared)router;
+        _router = cast(shared) router;
     }
 
-    void onListened(ushort port)
+    void onListened(ushort port) shared
     {
         writef("server listening at port %d...\n", port);
     }
 
-    void onConnected(Request req, Response res)
+    void onConnected(Request req, Response res) shared
     {
         writef("Request: %s %s %s\n", req.method, req.requestUri, req.httpVersion);
 
         _router.handleRequest(req, res);
     }
 
-    void onError(Throwable e)
+    void onError(Throwable e) shared
     {
         stderr.writeln(e);
     }
