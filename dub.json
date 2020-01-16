@@ -5,6 +5,7 @@
   "copyright": "Copyright © 2020, Ryooooooga",
   "license": "MIT",
   "dependencies": {
-    "dmarkdown": "*"
+    "dmarkdown": "*",
+    "sqlite3": "*"
   }
 }

@@ -1,6 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"dmarkdown": "0.3.0"
+		"dmarkdown": "0.3.0",
+		"sqlite3": "1.0.0"
 	}
 }

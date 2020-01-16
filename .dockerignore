@@ -13,3 +13,4 @@ heroin-test-*
 *.o
 *.obj
 *.lst
+*.db
