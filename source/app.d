@@ -6,9 +6,9 @@ import std.file;
 import std.path;
 import std.format;
 import std.json;
-import std.datetime;
 import std.string;
 import dmarkdown;
+import sqlite;
 import http;
 import server;
 import application;
@@ -21,7 +21,11 @@ class Post
     string author;
     string markdownText;
     string htmlText;
-    DateTime createdAt;
+    string createdAt;
+
+    this()
+    {
+    }
 
     this(string author, string markdownText, string htmlText)
     {
@@ -29,7 +33,7 @@ class Post
         this.author = author;
         this.markdownText = markdownText;
         this.htmlText = htmlText;
-        this.createdAt = DateTime();
+        this.createdAt = null;
     }
 }
 
@@ -40,7 +44,7 @@ JSONValue toJSON(Post post)
         "author": JSONValue(post.author),
         "markdownText": JSONValue(post.markdownText),
         "htmlText": JSONValue(post.htmlText),
-        "createdAt": JSONValue(post.createdAt.toISOExtString()),
+        "createdAt": JSONValue(post.createdAt),
     ]);
 }
 
@@ -54,9 +58,43 @@ interface Model(T) {
     void insert(T x);
 }
 
+class PostModel: Model!Post
+{
+    private SQLite3 _db;
+
+    this(SQLite3 db)
+    {
+        _db = db;
+    }
+
+    Post[] all()
+    {
+        Post[] posts = [];
+        auto q = _db.query("SELECT id, author, markdownText, htmlText, createdAt FROM post ORDER BY createdAt DESC");
+        while (q.step())
+        {
+            auto values = q.get!(int, string, string, string, string);
+            auto post = new Post();
+            post.id = values[0];
+            post.author = values[1];
+            post.markdownText = values[2];
+            post.htmlText = values[3];
+            post.createdAt = values[4];
+            posts ~= post;
+        }
+
+        return posts;
+    }
+
+    void insert(Post post)
+    {
+        _db.exec("INSERT INTO post (author, markdownText, htmlText) VALUES (?, ?, ?)", post.author, post.markdownText, post.htmlText);
+    }
+}
+
 class PostController
 {
-    Model!Post _model;
+    private shared Model!Post _model;
 
     this(shared Model!Post model) shared
     {
@@ -122,10 +160,23 @@ void serveStatic(Router router, string root, string path, string pattern)
 
 class SimpleApplication : Application
 {
-    private Router _router;
+    private shared Router _router;
 
     this() shared
     {
+        // Setup database
+        auto db = new SQLite3("./db/database.db");
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS post (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                author TEXT NOT NULL,
+                markdownText TEXT NOT NULL,
+                htmlText TEXT NOT NULL,
+                createdAt DATETIME NOT NULL DEFAULT (datetime('now', 'localtime'))
+            )
+        `);
+
+        // Setup routing
         auto router = new Router();
 
         // Static resources
@@ -133,8 +184,8 @@ class SimpleApplication : Application
         router.forwardGet("/", "/index.html");
 
         // JSON APIs
-        shared Model!Post model = null;
-        auto postController = new shared(PostController)(model);
+        auto model = new PostModel(db);
+        auto postController = new shared(PostController)(cast(shared)model);
         router.get("/posts", (req, res) => postController.onGetPosts(req, res));
         router.post("/posts", (req, res) => postController.onPostPosts(req, res));
 
