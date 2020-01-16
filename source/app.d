@@ -17,7 +17,7 @@ import renderers;
 
 class Post
 {
-    long id;
+    int id;
     string author;
     string markdownText;
     string htmlText;
