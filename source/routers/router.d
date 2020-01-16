@@ -6,9 +6,9 @@ import httpstatus;
 import request;
 import response;
 
-shared class Router : RequestHandler
+class Router : RequestHandler
 {
-    private RequestHandler[string][string] _handlers;
+    private shared(RequestHandler)[string][string] _handlers;
 
     void get(string uri, RequestHandlerDelegate handler)
     {
@@ -20,7 +20,7 @@ shared class Router : RequestHandler
         _handlers[Method.GET][uri] = handler;
     }
 
-    void get_alias(string alias_, string as_)
+    void forwardGet(string alias_, string as_)
     {
         _handlers[Method.GET][alias_] = _handlers[Method.GET][as_];
     }
@@ -35,7 +35,7 @@ shared class Router : RequestHandler
         _handlers[Method.POST][uri] = handler;
     }
 
-    void handleRequest(Request req, Response res)
+    void handleRequest(Request req, Response res) shared
     {
         auto method_handlers = req.method in _handlers;
         if (method_handlers)

@@ -111,36 +111,38 @@ shared class PostController
     }
 }
 
+void serveStatic(Router router, string root, string path, string pattern)
+{
+    const absPath = path.asAbsolutePath.to!string;
+    auto files = absPath.dirEntries(pattern, SpanMode.depth).filter!"a.isFile";
+
+    foreach (dirEntry; files)
+    {
+        const relative = relativePath(dirEntry.name, absPath);
+        const uri = buildNormalizedPath(root, relative);
+
+        router.get(uri, render_file(dirEntry.name));
+    }
+}
+
 shared class SimpleApplication : Application
 {
     private Router _router;
 
     this() shared
     {
-        _router = new shared(Router)();
+        auto router = new Router();
 
         // Static resources
-        serveStatic("/", "./static", "*");
-        _router.get_alias("/", "/index.html");
+        router.serveStatic("/", "./static", "*");
+        router.forwardGet("/", "/index.html");
 
         // JSON APIs
         auto postController = new shared(PostController)();
-        _router.get("/posts", (req, res) => postController.onGetPosts(req, res));
-        _router.post("/posts", (req, res) => postController.onPostPosts(req, res));
-    }
+        router.get("/posts", (req, res) => postController.onGetPosts(req, res));
+        router.post("/posts", (req, res) => postController.onPostPosts(req, res));
 
-    void serveStatic(string root, string path, string pattern)
-    {
-        const absPath = path.asAbsolutePath.to!string;
-        auto files = absPath.dirEntries(pattern, SpanMode.depth).filter!"a.isFile";
-
-        foreach (dirEntry; files)
-        {
-            const relative = relativePath(dirEntry.name, absPath);
-            const uri = buildNormalizedPath(root, relative);
-
-            _router.get(uri, render_file(dirEntry.name));
-        }
+        _router = cast(shared)router;
     }
 
     void onListened(ushort port)
