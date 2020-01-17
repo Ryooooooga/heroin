@@ -1,51 +1,110 @@
 module router;
 
+import std.algorithm;
+import std.string;
 import std.format;
 import routers;
 import httpstatus;
 import request;
 import response;
 
+private struct RoutingTree
+{
+    private RoutingTree[string] _children;
+    private shared(RequestHandler)[Method] _handlers;
+
+    void insert(Method method, string path, shared(RequestHandler) handler)
+    {
+        // '/a/b' -> 'a/b'
+        path.skipOver('/');
+
+        if (path.length == 0)
+        {
+            _handlers[method] = handler;
+            return;
+        }
+
+        auto sep_index = path.indexOf('/');
+        sep_index = sep_index >= 0 ? sep_index : path.length;
+
+        const head = path[0 .. sep_index];
+        const tail = path[sep_index .. $];
+
+        if ((head in _children) is null)
+        {
+            _children[head] = RoutingTree();
+        }
+
+        _children[head].insert(method, tail, handler);
+    }
+
+    shared(RequestHandler) find(Method method, string path) shared
+    {
+        // '/a/b' -> 'a/b'
+        path.skipOver('/');
+
+        if (path.length == 0)
+        {
+            auto handler = method in _handlers;
+            return handler !is null ? *handler : null;
+        }
+
+        auto sep_index = path.indexOf('/');
+        sep_index = sep_index >= 0 ? sep_index : path.length;
+
+        const head = path[0 .. sep_index];
+        const tail = path[sep_index .. $];
+
+        auto child = head in _children;
+        return child !is null ? child.find(method, tail) : null;
+    }
+}
+
 class Router : RequestHandler
 {
-    private shared(RequestHandler)[string][string] _handlers;
+    private RoutingTree _tree;
 
-    void get(string uri, RequestHandlerDelegate handler)
+    void insertHandler(Method method, string path, shared(RequestHandler) handler)
     {
-        get(uri, new shared(DelegateRequestHandler)(handler));
+        _tree.insert(method, path, handler);
     }
 
-    void get(string uri, shared RequestHandler handler)
+    void get(string path, RequestHandlerDelegate handler)
     {
-        _handlers[Methods.GET][uri] = handler;
+        get(path, new shared(DelegateRequestHandler)(handler));
     }
 
-    void forwardGet(string alias_, string as_)
+    void get(string path, shared RequestHandler handler)
     {
-        _handlers[Methods.GET][alias_] = _handlers[Methods.GET][as_];
+        insertHandler(Methods.GET, path, handler);
     }
 
-    void post(string uri, RequestHandlerDelegate handler)
+    void forwardGet(string path, string as_)
     {
-        post(uri, new shared(DelegateRequestHandler)(handler));
+        get(path, (req, res) => (cast(shared)this).doHandleRequest(as_, req, res));
     }
 
-    void post(string uri, shared RequestHandler handler)
+    void post(string path, RequestHandlerDelegate handler)
     {
-        _handlers[Methods.POST][uri] = handler;
+        post(path, new shared(DelegateRequestHandler)(handler));
     }
 
-    void handleRequest(Request req, Response res) shared
+    void post(string path, shared RequestHandler handler)
     {
-        auto method_handlers = req.method in _handlers;
-        if (method_handlers)
+        insertHandler(Methods.POST, path, handler);
+    }
+
+    shared(RequestHandler) findHandler(Method method, string path) shared
+    {
+        return _tree.find(method, path);
+    }
+
+    private void doHandleRequest(string path, Request req, Response res) shared
+    {
+        if (auto handler = findHandler(req.method, path))
         {
-            auto handler = req.requestUri.path in *method_handlers;
-            if (handler)
-            {
-                handler.handleRequest(req, res);
-                return;
-            }
+            handler.handleRequest(req, res);
+            return;
         }
 
         // Not found
@@ -53,4 +112,52 @@ class Router : RequestHandler
         res.body = format("%s %s %d %s", req.method, req.requestUri,
                 cast(int) res.status, res.status.text);
     }
+
+    void handleRequest(Request req, Response res) shared
+    {
+        doHandleRequest(req.requestUri.path, req, res);
+    }
+}
+
+unittest
+{
+    class StubHandler : RequestHandler
+    {
+        shared int called = 0;
+
+        void handleRequest(Request req, Response res) shared
+        {
+            import core.atomic;
+
+            atomicOp!"+="(this.called, 1);
+        }
+    }
+
+    auto router = new Router();
+    auto handlerRoot = new shared(StubHandler)();
+    auto handlerA = new shared(StubHandler)();
+    auto handlerB = new shared(StubHandler)();
+
+    router.get("/", handlerRoot);
+    router.get("/a", handlerA);
+    router.get("a/b", handlerB);
+    router.post("/a/b", handlerB);
+
+    auto r = cast(shared)router;
+
+    assert(r.findHandler("GET", "/") is handlerRoot);
+    assert(r.findHandler("GET", "/a") is handlerA);
+    assert(r.findHandler("GET", "a") is handlerA);
+    assert(r.findHandler("GET", "/a/b") is handlerB);
+    assert(r.findHandler("GET", "a/b") is handlerB);
+    assert(r.findHandler("GET", "/a/c") is null);
+    assert(r.findHandler("GET", "a/c") is null);
+
+    assert(r.findHandler("POST", "/") is null);
+    assert(r.findHandler("POST", "/a") is null);
+    assert(r.findHandler("POST", "a") is null);
+    assert(r.findHandler("POST", "/a/b") is handlerB);
+    assert(r.findHandler("POST", "a/b") is handlerB);
+    assert(r.findHandler("GET", "/a/c") is null);
+    assert(r.findHandler("GET", "a/c") is null);
 }

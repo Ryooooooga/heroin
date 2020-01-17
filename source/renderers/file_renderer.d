@@ -27,8 +27,7 @@ RequestHandlerDelegate render_file(string file, string contentType = null)
         {
             if (contentType is null)
             {
-                const estimatedContentType = file.extension in knownContentTypes;
-                if (estimatedContentType)
+                if (const estimatedContentType = file.extension in knownContentTypes)
                 {
                     contentType = *estimatedContentType;
                 }
