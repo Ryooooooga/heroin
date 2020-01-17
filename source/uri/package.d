@@ -1,31 +1,14 @@
 module uri;
 
-import std.algorithm;
 import std.string;
 
 class Uri
 {
     private string _text;
-    private string _path;
-    private string _query;
-    private string _hash;
 
     this(string text)
     {
-        auto query_index = text.indexOf('?');
-        query_index = query_index == -1 ? text.length : query_index;
-
-        auto hash_index = text.indexOf('#', query_index);
-        hash_index = hash_index == -1 ? text.length : hash_index;
-
-        const path = text[0 .. query_index];
-        const query = text[query_index .. hash_index];
-        const hash = text[hash_index .. $];
-
         _text = text;
-        _path = path;
-        _query = query;
-        _hash = hash;
     }
 
     @property string text() const
@@ -35,17 +18,14 @@ class Uri
 
     @property string path() const
     {
-        return _path;
+        const query_index = _text.indexOf('?');
+        return query_index >= 0 ? _text[0 .. query_index] : _text;
     }
 
     @property string query() const
     {
-        return _query;
-    }
-
-    @property string hash() const
-    {
-        return _hash;
+        const query_index = _text.indexOf('?');
+        return query_index >= 0 ? _text[query_index .. $] : null;
     }
 
     override string toString() const
@@ -56,10 +36,18 @@ class Uri
 
 unittest
 {
-    const uri = new Uri("/test%20path?b=0&c=Hello%20world#hash");
+    {
+        const uri = new Uri("/test");
 
-    assert(uri.text == "/test%20path?b=0&c=Hello%20world#hash");
-    assert(uri.path == "/test%20path");
-    assert(uri.query == "?b=0&c=Hello%20world");
-    assert(uri.hash == "#hash");
+        assert(uri.text == "/test");
+        assert(uri.path == "/test");
+        assert(uri.query == null);
+    }
+    {
+        const uri = new Uri("/test%20path?b=0&c=Hello%20world");
+
+        assert(uri.text == "/test%20path?b=0&c=Hello%20world");
+        assert(uri.path == "/test%20path");
+        assert(uri.query == "?b=0&c=Hello%20world");
+    }
 }

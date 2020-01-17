@@ -40,12 +40,12 @@ class Post
 JSONValue toJSON(Post post)
 {
     return JSONValue([
-        "id": JSONValue(post.id),
-        "author": JSONValue(post.author),
-        "markdownText": JSONValue(post.markdownText),
-        "htmlText": JSONValue(post.htmlText),
-        "createdAt": JSONValue(post.createdAt),
-    ]);
+            "id": JSONValue(post.id),
+            "author": JSONValue(post.author),
+            "markdownText": JSONValue(post.markdownText),
+            "htmlText": JSONValue(post.htmlText),
+            "createdAt": JSONValue(post.createdAt),
+            ]);
 }
 
 JSONValue toJSON(Post[] posts)
@@ -53,12 +53,13 @@ JSONValue toJSON(Post[] posts)
     return JSONValue(posts.map!(post => post.toJSON()).array);
 }
 
-interface Model(T) {
+interface Model(T)
+{
     T[] all();
     void insert(T x);
 }
 
-class PostModel: Model!Post
+class PostModel : Model!Post
 {
     private SQLite3 _db;
 
@@ -80,7 +81,8 @@ class PostModel: Model!Post
     Post[] all()
     {
         Post[] posts = [];
-        auto q = _db.query("SELECT id, author, markdownText, htmlText, createdAt FROM post ORDER BY createdAt DESC");
+        auto q = _db.query(
+                "SELECT id, author, markdownText, htmlText, createdAt FROM post ORDER BY createdAt DESC");
         while (q.step())
         {
             auto values = q.get!(int, string, string, string, string);
@@ -98,7 +100,8 @@ class PostModel: Model!Post
 
     void insert(Post post)
     {
-        _db.exec("INSERT INTO post (author, markdownText, htmlText) VALUES (?, ?, ?)", post.author, post.markdownText, post.htmlText);
+        _db.exec("INSERT INTO post (author, markdownText, htmlText) VALUES (?, ?, ?)",
+                post.author, post.markdownText, post.htmlText);
     }
 }
 
@@ -114,8 +117,9 @@ class PostController
     // GET /posts
     void onGetPosts(Request req, Response res) shared
     {
-        synchronized(_model) {
-            auto model = cast(Model!Post)_model;
+        synchronized (_model)
+        {
+            auto model = cast(Model!Post) _model;
 
             res.status = HttpStatus.OK;
             res.headers["Content-Type"] = "application/json; charset=utf-8";
@@ -126,8 +130,9 @@ class PostController
     // POST /posts
     void onPostPosts(Request req, Response res) shared
     {
-        synchronized(_model) {
-            auto model = cast(Model!Post)_model;
+        synchronized (_model)
+        {
+            auto model = cast(Model!Post) _model;
 
             const json = parseJSON(req.body);
             const author = json["author"].str.strip;
@@ -136,8 +141,8 @@ class PostController
                 | MarkdownFlags.noInlineHtml | MarkdownFlags.keepLineBreaks;
             const htmlText = filterMarkdown(markdownText, markdownFlags);
 
-            if (author.length == 0 || 32 < author.length || markdownText.length == 0
-                    || 1024 < markdownText.length)
+            if (author.length == 0 || 32 < author.length
+                    || markdownText.length == 0 || 1024 < markdownText.length)
             {
                 res.status = HttpStatus.BAD_REQUEST;
                 res.body = "{\"error\": \"POST /posts error\"}";
@@ -186,7 +191,7 @@ class SimpleApplication : Application
 
         // JSON APIs
         auto model = new PostModel(db);
-        auto postController = new shared(PostController)(cast(shared)model);
+        auto postController = new shared(PostController)(cast(shared) model);
         router.get("/posts", (req, res) => postController.onGetPosts(req, res));
         router.post("/posts", (req, res) => postController.onPostPosts(req, res));
 

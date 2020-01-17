@@ -57,12 +57,12 @@ class Request
 
     string body()
     {
-        if (_body !is null)
+        if (_body is null)
         {
-            return _body;
+            _body = _stream.read(headers["Content-Length"].to!size_t);
         }
 
-        return _body = _stream.read(headers["Content-Length"].to!size_t);
+        return _body;
     }
 
     unittest
