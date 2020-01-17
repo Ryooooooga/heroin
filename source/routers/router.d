@@ -17,12 +17,12 @@ class Router : RequestHandler
 
     void get(string uri, shared RequestHandler handler)
     {
-        _handlers[Method.GET][uri] = handler;
+        _handlers[Methods.GET][uri] = handler;
     }
 
     void forwardGet(string alias_, string as_)
     {
-        _handlers[Method.GET][alias_] = _handlers[Method.GET][as_];
+        _handlers[Methods.GET][alias_] = _handlers[Methods.GET][as_];
     }
 
     void post(string uri, RequestHandlerDelegate handler)
@@ -32,7 +32,7 @@ class Router : RequestHandler
 
     void post(string uri, shared RequestHandler handler)
     {
-        _handlers[Method.POST][uri] = handler;
+        _handlers[Methods.POST][uri] = handler;
     }
 
     void handleRequest(Request req, Response res) shared

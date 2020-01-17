@@ -9,7 +9,9 @@ import stream;
 import httpversion;
 import uri;
 
-enum Method
+alias Method = string;
+
+enum Methods : Method
 {
     GET = "GET",
     POST = "POST",
@@ -23,7 +25,7 @@ class Request
     private InputStream _stream;
     private string _body;
 
-    string method;
+    Method method;
     Uri requestUri;
     HttpVersion httpVersion;
     string[string] headers;
@@ -70,7 +72,7 @@ class Request
         auto req = Request.parse(
                 "GET / HTTP/1.1\r\nHost: example.com\r\nUser-Agent: unittest \r\nContent-Length: 6\r\n\r\nbody\r\n");
 
-        assert(req.method == Method.GET);
+        assert(req.method == Methods.GET);
         assert(req.requestUri.text == "/");
         assert(req.httpVersion == HttpVersions.HTTP_1_1);
 
