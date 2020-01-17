@@ -13,6 +13,8 @@ private struct RoutingTree
     private RoutingTree[string] _children;
     private shared(RequestHandler)[Method] _handlers;
 
+    enum WILDCARD = "?";
+
     void insert(Method method, string path, shared(RequestHandler) handler)
     {
         // '/a/b' -> 'a/b'
@@ -27,8 +29,13 @@ private struct RoutingTree
         auto sep_index = path.indexOf('/');
         sep_index = sep_index >= 0 ? sep_index : path.length;
 
-        const head = path[0 .. sep_index];
+        auto head = path[0 .. sep_index];
         const tail = path[sep_index .. $];
+
+        if (head == "*")
+        {
+            head = WILDCARD;
+        }
 
         if ((head in _children) is null)
         {
@@ -56,7 +63,16 @@ private struct RoutingTree
         const tail = path[sep_index .. $];
 
         auto child = head in _children;
-        return child !is null ? child.find(method, tail) : null;
+        if (child is null)
+        {
+            child = WILDCARD in _children;
+            if (child is null)
+            {
+                return null;
+            }
+        }
+
+        return child.find(method, tail);
     }
 }
 
@@ -137,11 +153,13 @@ unittest
     auto handlerRoot = new shared(StubHandler)();
     auto handlerA = new shared(StubHandler)();
     auto handlerB = new shared(StubHandler)();
+    auto handlerC = new shared(StubHandler)();
 
     router.get("/", handlerRoot);
     router.get("/a", handlerA);
     router.get("a/b", handlerB);
     router.post("/a/b", handlerB);
+    router.post("/a/*", handlerC);
 
     auto r = cast(shared)router;
 
@@ -150,14 +168,20 @@ unittest
     assert(r.findHandler("GET", "a") is handlerA);
     assert(r.findHandler("GET", "/a/b") is handlerB);
     assert(r.findHandler("GET", "a/b") is handlerB);
-    assert(r.findHandler("GET", "/a/c") is null);
-    assert(r.findHandler("GET", "a/c") is null);
+    assert(r.findHandler("GET", "/a/X") is null);
+    assert(r.findHandler("GET", "a/Y") is null);
+    assert(r.findHandler("GET", "b/Z/z") is null);
+    assert(r.findHandler("GET", "/b/X") is null);
+    assert(r.findHandler("GET", "b/Y") is null);
 
     assert(r.findHandler("POST", "/") is null);
     assert(r.findHandler("POST", "/a") is null);
     assert(r.findHandler("POST", "a") is null);
     assert(r.findHandler("POST", "/a/b") is handlerB);
     assert(r.findHandler("POST", "a/b") is handlerB);
-    assert(r.findHandler("GET", "/a/c") is null);
-    assert(r.findHandler("GET", "a/c") is null);
+    assert(r.findHandler("POST", "/a/X") is handlerC);
+    assert(r.findHandler("POST", "a/Y") is handlerC);
+    assert(r.findHandler("POST", "a/Z/z") is null);
+    assert(r.findHandler("POST", "/b/X") is null);
+    assert(r.findHandler("POST", "b/Y") is null);
 }
