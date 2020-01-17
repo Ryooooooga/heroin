@@ -65,6 +65,16 @@ class PostModel: Model!Post
     this(SQLite3 db)
     {
         _db = db;
+
+        _db.exec(`
+            CREATE TABLE IF NOT EXISTS post (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                author TEXT NOT NULL,
+                markdownText TEXT NOT NULL,
+                htmlText TEXT NOT NULL,
+                createdAt DATETIME NOT NULL DEFAULT (datetime('now', 'localtime'))
+            )
+        `);
     }
 
     Post[] all()
@@ -166,15 +176,6 @@ class SimpleApplication : Application
     {
         // Setup database
         auto db = new SQLite3("./db/database.db");
-        db.exec(`
-            CREATE TABLE IF NOT EXISTS post (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                author TEXT NOT NULL,
-                markdownText TEXT NOT NULL,
-                htmlText TEXT NOT NULL,
-                createdAt DATETIME NOT NULL DEFAULT (datetime('now', 'localtime'))
-            )
-        `);
 
         // Setup routing
         auto router = new Router();
