@@ -115,7 +115,7 @@ class PostController
     }
 
     // GET /posts
-    void onGetPosts(Request req, Response res) shared
+    void onIndex(Request req, Response res) shared
     {
         synchronized (_model)
         {
@@ -128,7 +128,7 @@ class PostController
     }
 
     // POST /posts
-    void onPostPosts(Request req, Response res) shared
+    void onCreate(Request req, Response res) shared
     {
         synchronized (_model)
         {
@@ -192,8 +192,8 @@ class SimpleApplication : Application
         // JSON APIs
         auto model = new PostModel(db);
         auto postController = new shared(PostController)(cast(shared) model);
-        router.get("/posts", (req, res) => postController.onGetPosts(req, res));
-        router.post("/posts", (req, res) => postController.onPostPosts(req, res));
+        router.get("/posts", (req, res) => postController.onIndex(req, res));
+        router.post("/posts", (req, res) => postController.onCreate(req, res));
 
         _router = cast(shared) router;
     }
