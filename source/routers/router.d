@@ -45,15 +45,22 @@ private struct RoutingTree
         _children[head].insert(method, tail, handler);
     }
 
-    shared(RequestHandler) find(Method method, string path) shared
+    bool handleRequest(Request req, Response res, Method method, string path) shared
     {
         // '/a/b' -> 'a/b'
         path.skipOver('/');
 
         if (path.length == 0)
         {
-            auto handler = method in _handlers;
-            return handler !is null ? *handler : null;
+            if (auto handler = method in _handlers)
+            {
+                handler.handleRequest(req, res);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         auto sep_index = path.indexOf('/');
@@ -68,11 +75,11 @@ private struct RoutingTree
             child = WILDCARD in _children;
             if (child is null)
             {
-                return null;
+                return false;
             }
         }
 
-        return child.find(method, tail);
+        return child.handleRequest(req, res, method, tail);
     }
 }
 
@@ -110,16 +117,10 @@ class Router : RequestHandler
         insertHandler(Methods.POST, path, handler);
     }
 
-    shared(RequestHandler) findHandler(Method method, string path) shared
-    {
-        return _tree.find(method, path);
-    }
-
     private void doHandleRequest(string path, Request req, Response res) shared
     {
-        if (auto handler = findHandler(req.method, path))
+        if (_tree.handleRequest(req, res, req.method, path))
         {
-            handler.handleRequest(req, res);
             return;
         }
 
@@ -137,16 +138,50 @@ class Router : RequestHandler
 
 unittest
 {
+    import uri;
+    import http;
+
     class StubHandler : RequestHandler
     {
-        shared int called = 0;
+        bool accepting = false;
 
         void handleRequest(Request req, Response res) shared
         {
-            import core.atomic;
-
-            atomicOp!"+="(this.called, 1);
+            assert(accepting);
+            res.status = HttpStatus.OK;
+            res.body = "OK!";
         }
+    }
+
+    void checkRequestOK(Router router, Method method, string path, shared(StubHandler) handler)
+    {
+        auto req = new Request();
+        req.method = method;
+        req.requestUri = new Uri(path);
+        req.httpVersion = HttpVersions.HTTP_1_1;
+
+        auto res = new Response();
+
+        handler.accepting = true;
+        (cast(shared)router).handleRequest(req, res);
+        handler.accepting = false;
+
+        assert(res.status == HttpStatus.OK);
+        assert(res.body == "OK!");
+    }
+
+    void checkRequest404(Router router, Method method, string path)
+    {
+        auto req = new Request();
+        req.method = method;
+        req.requestUri = new Uri(path);
+        req.httpVersion = HttpVersions.HTTP_1_1;
+
+        auto res = new Response();
+
+        (cast(shared)router).handleRequest(req, res);
+
+        assert(res.status == HttpStatus.NOT_FOUND);
     }
 
     auto router = new Router();
@@ -161,27 +196,25 @@ unittest
     router.post("/a/b", handlerB);
     router.post("/a/*", handlerC);
 
-    auto r = cast(shared)router;
+    checkRequestOK(router, "GET", "/", handlerRoot);
+    checkRequestOK(router, "GET", "/a", handlerA);
+    checkRequestOK(router, "GET", "a", handlerA);
+    checkRequestOK(router, "GET", "/a/b", handlerB);
+    checkRequestOK(router, "GET", "a/b", handlerB);
+    checkRequest404(router, "GET", "/a/X");
+    checkRequest404(router, "GET", "a/Y");
+    checkRequest404(router, "GET", "b/Z/z");
+    checkRequest404(router, "GET", "/b/X");
+    checkRequest404(router, "GET", "b/Y");
 
-    assert(r.findHandler("GET", "/") is handlerRoot);
-    assert(r.findHandler("GET", "/a") is handlerA);
-    assert(r.findHandler("GET", "a") is handlerA);
-    assert(r.findHandler("GET", "/a/b") is handlerB);
-    assert(r.findHandler("GET", "a/b") is handlerB);
-    assert(r.findHandler("GET", "/a/X") is null);
-    assert(r.findHandler("GET", "a/Y") is null);
-    assert(r.findHandler("GET", "b/Z/z") is null);
-    assert(r.findHandler("GET", "/b/X") is null);
-    assert(r.findHandler("GET", "b/Y") is null);
-
-    assert(r.findHandler("POST", "/") is null);
-    assert(r.findHandler("POST", "/a") is null);
-    assert(r.findHandler("POST", "a") is null);
-    assert(r.findHandler("POST", "/a/b") is handlerB);
-    assert(r.findHandler("POST", "a/b") is handlerB);
-    assert(r.findHandler("POST", "/a/X") is handlerC);
-    assert(r.findHandler("POST", "a/Y") is handlerC);
-    assert(r.findHandler("POST", "a/Z/z") is null);
-    assert(r.findHandler("POST", "/b/X") is null);
-    assert(r.findHandler("POST", "b/Y") is null);
+    checkRequest404(router, "POST", "/");
+    checkRequest404(router, "POST", "/a");
+    checkRequest404(router, "POST", "a");
+    checkRequestOK(router, "POST", "/a/b", handlerB);
+    checkRequestOK(router, "POST", "a/b", handlerB);
+    checkRequestOK(router, "POST", "/a/X", handlerC);
+    checkRequestOK(router, "POST", "a/Y", handlerC);
+    checkRequest404(router, "POST", "a/Z/z");
+    checkRequest404(router, "POST", "/b/X");
+    checkRequest404(router, "POST", "b/Y");
 }
