@@ -86,10 +86,12 @@ const Form = {
   },
   methods: {
     async onSubmit() {
-      dispatch(action_types.CREATE_POST, {
+      await dispatch(action_types.CREATE_POST, {
         author: this.author,
         text: this.text
       });
+
+      this.text = "";
     }
   },
   template: `
