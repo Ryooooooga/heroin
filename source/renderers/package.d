@@ -1,3 +1,3 @@
 module renderers;
 
-public import file_renderer;
+public import filerenderer;

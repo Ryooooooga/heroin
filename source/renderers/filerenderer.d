@@ -1,4 +1,4 @@
-module file_renderer;
+module filerenderer;
 
 import std.file : FileException, read;
 import std.path : extension;
@@ -17,7 +17,7 @@ pure shared static this()
     ];
 }
 
-RequestHandlerDelegate renderFile(Request req, Response res, string file, string contentType = null)
+void renderFile(Request req, Response res, string file, string contentType = null)
 {
     try
     {

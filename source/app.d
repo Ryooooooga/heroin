@@ -164,13 +164,12 @@ void serveStatic(Router router, string root, string path, string pattern)
     const absPath = path.asAbsolutePath.to!string;
     auto files = absPath.dirEntries(pattern, SpanMode.depth).filter!"a.isFile";
 
-    foreach (dirEntry; files)
-    {
-        const relative = relativePath(dirEntry.name, absPath);
+    files.each!((file) {
+        const relative = relativePath(file.name, absPath);
         const uri = buildNormalizedPath(root, relative);
 
-        router.get(uri, render_file(dirEntry.name));
-    }
+        router.get(uri, (req, res) {renderFile(req, res, file.name);});
+    });
 }
 
 shared class SimpleApplication : Application
