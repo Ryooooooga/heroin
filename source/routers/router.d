@@ -104,7 +104,7 @@ class Router : RequestHandler
 
     void forwardGet(string path, string as_)
     {
-        get(path, (req, res) => (cast(shared)this).doHandleRequest(as_, req, res));
+        get(path, (req, res) => (cast(shared) this).doHandleRequest(as_, req, res));
     }
 
     void post(string path, RequestHandlerDelegate handler)
@@ -138,8 +138,8 @@ class Router : RequestHandler
 
 unittest
 {
-    import uri;
-    import http;
+    import uri : Uri;
+    import http : HttpVersions;
 
     class StubHandler : RequestHandler
     {
@@ -163,7 +163,7 @@ unittest
         auto res = new Response();
 
         handler.accepting = true;
-        (cast(shared)router).handleRequest(req, res);
+        (cast(shared) router).handleRequest(req, res);
         handler.accepting = false;
 
         assert(res.status == HttpStatus.OK);
@@ -179,7 +179,7 @@ unittest
 
         auto res = new Response();
 
-        (cast(shared)router).handleRequest(req, res);
+        (cast(shared) router).handleRequest(req, res);
 
         assert(res.status == HttpStatus.NOT_FOUND);
     }

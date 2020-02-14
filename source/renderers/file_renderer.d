@@ -1,12 +1,9 @@
 module file_renderer;
 
-import std.file;
-import std.path;
-import std.exception;
-import routers;
-import request;
-import response;
-import httpstatus;
+import std.file : FileException, read;
+import std.path : extension;
+import routers : RequestHandlerDelegate;
+import http : HttpStatus, Request, Response;
 
 immutable string[string] knownContentTypes;
 
@@ -20,28 +17,26 @@ pure shared static this()
     ];
 }
 
-RequestHandlerDelegate render_file(string file, string contentType = null)
+RequestHandlerDelegate renderFile(Request req, Response res, string file, string contentType = null)
 {
-    return (req, res) {
-        try
+    try
+    {
+        if (contentType is null)
         {
-            if (contentType is null)
+            if (const estimatedContentType = file.extension in knownContentTypes)
             {
-                if (const estimatedContentType = file.extension in knownContentTypes)
-                {
-                    contentType = *estimatedContentType;
-                }
+                contentType = *estimatedContentType;
             }
-
-            const content = cast(string) read(file);
-
-            res.headers["Content-Type"] = contentType;
-            res.body = content;
         }
-        catch (FileException e)
-        {
-            res.status = HttpStatus.NOT_FOUND;
-            res.body = e.toString();
-        }
-    };
+
+        const content = cast(string) read(file);
+
+        res.headers["Content-Type"] = contentType;
+        res.body = content;
+    }
+    catch (FileException e)
+    {
+        res.status = HttpStatus.NOT_FOUND;
+        res.body = e.toString();
+    }
 }

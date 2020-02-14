@@ -1,11 +1,11 @@
 module application;
 
-import request;
-import response;
+import request : Request;
+import response : Response;
 
-interface Application
+shared interface Application
 {
-    void onListened(ushort port) shared;
-    void onConnected(Request req, Response res) shared;
-    void onError(Throwable e) shared;
+    void onListened(ushort port);
+    void onConnected(Request req, Response res);
+    void onError(Throwable e);
 }

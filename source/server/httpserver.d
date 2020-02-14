@@ -1,12 +1,11 @@
 module httpserver;
 
-import std.concurrency;
-import std.socket;
-import std.string;
-import std.algorithm.searching;
-import http;
-import socketstream;
-import application;
+import std.concurrency : spawn;
+import std.socket : InternetAddress, Socket, SocketShutdown, SocketOption,
+    SocketOptionLevel, TcpSocket;
+import http : HttpStatus, Request, Response;
+import socketstream : SocketStream;
+import application : Application;
 
 class HttpServer
 {
@@ -32,7 +31,7 @@ class HttpServer
             try
             {
                 spawn(function(shared Application app, shared Socket client_socket) {
-                    onConnected(app, cast(Socket) client_socket);
+                    onConnected(app, cast() client_socket);
                 }, _app, cast(shared) _socket.accept());
             }
             catch (Throwable e)

@@ -1,7 +1,7 @@
 module stream;
 
-import std.algorithm;
-import std.string;
+import std.algorithm : copy, max, min;
+import std.string : indexOf;
 
 abstract class InputStream
 {

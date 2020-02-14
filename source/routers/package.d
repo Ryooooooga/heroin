@@ -2,12 +2,11 @@ module routers;
 
 public import router;
 
-import request;
-import response;
+import http : Request, Response;
 
-interface RequestHandler
+shared interface RequestHandler
 {
-    void handleRequest(Request, Response) shared;
+    void handleRequest(Request, Response);
 }
 
 alias RequestHandlerDelegate = void delegate(Request, Response);

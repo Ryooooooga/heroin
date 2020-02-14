@@ -1,13 +1,13 @@
 module request;
 
-import std.algorithm;
-import std.array;
-import std.conv;
-import std.exception;
-import std.string;
-import stream;
-import httpversion;
-import uri;
+import std.algorithm : findSplit;
+import std.array : array;
+import std.conv : to;
+import std.exception : enforce;
+import std.string : strip;
+import stream : InputStream, MemoryStream;
+import httpversion : HttpVersion, HttpVersions;
+import uri : Uri;
 
 alias Method = string;
 

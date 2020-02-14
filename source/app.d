@@ -119,7 +119,7 @@ class PostController
     {
         synchronized (_model)
         {
-            auto model = cast(Model!Post) _model;
+            auto model = cast() _model;
 
             res.status = HttpStatus.OK;
             res.headers["Content-Type"] = "application/json; charset=utf-8";
@@ -132,7 +132,7 @@ class PostController
     {
         synchronized (_model)
         {
-            auto model = cast(Model!Post) _model;
+            auto model = cast() _model;
 
             const json = parseJSON(req.body);
             const author = json["author"].str.strip;
@@ -173,11 +173,11 @@ void serveStatic(Router router, string root, string path, string pattern)
     }
 }
 
-class SimpleApplication : Application
+shared class SimpleApplication : Application
 {
-    private shared Router _router;
+    private Router _router;
 
-    this() shared
+    this()
     {
         // Setup database
         auto db = new SQLite3("./db/database.db");
@@ -190,27 +190,27 @@ class SimpleApplication : Application
         router.forwardGet("/", "/index.html");
 
         // JSON APIs
-        auto model = new PostModel(db);
-        auto postController = new shared(PostController)(cast(shared) model);
+        auto postModel = new PostModel(db);
+        auto postController = new shared PostController(cast(shared) postModel);
         router.get("/posts", (req, res) => postController.onIndex(req, res));
         router.post("/posts", (req, res) => postController.onCreate(req, res));
 
         _router = cast(shared) router;
     }
 
-    void onListened(ushort port) shared
+    void onListened(ushort port)
     {
         writef("server listening at port %d...\n", port);
     }
 
-    void onConnected(Request req, Response res) shared
+    void onConnected(Request req, Response res)
     {
         writef("Request: %s %s %s\n", req.method, req.requestUri, req.httpVersion);
 
         _router.handleRequest(req, res);
     }
 
-    void onError(Throwable e) shared
+    void onError(Throwable e)
     {
         stderr.writeln(e);
     }
@@ -218,5 +218,5 @@ class SimpleApplication : Application
 
 void main()
 {
-    new HttpServer(new shared(SimpleApplication)()).listen(3000);
+    new HttpServer(new shared SimpleApplication()).listen(3000);
 }

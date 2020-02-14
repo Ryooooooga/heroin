@@ -1,6 +1,6 @@
 module uri;
 
-import std.string;
+import std.string : indexOf;
 
 class Uri
 {
