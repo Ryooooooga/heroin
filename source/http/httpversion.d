@@ -1,4 +1,4 @@
-module httpversion;
+module http.httpversion;
 
 alias HttpVersion = string;
 

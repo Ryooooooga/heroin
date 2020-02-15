@@ -1,3 +1,3 @@
 module renderers;
 
-public import filerenderer;
+public import renderers.filerenderer;

@@ -1,4 +1,4 @@
-module filerenderer;
+module renderers.filerenderer;
 
 import std.file : FileException, read;
 import std.path : extension;

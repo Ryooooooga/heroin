@@ -1,12 +1,10 @@
-module router;
+module routers.router;
 
-import std.algorithm;
-import std.string;
-import std.format;
-import routers;
-import httpstatus;
-import request;
-import response;
+import std.algorithm : skipOver;
+import std.string : indexOf, strip;
+import std.format : format;
+import routers : RequestHandler, RequestHandlerDelegate, DelegateRequestHandler;
+import http : HttpStatus, Method, Methods, text, Request, Response;
 
 private struct RoutingTree
 {

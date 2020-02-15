@@ -1,3 +1,3 @@
 module server;
 
-public import httpserver;
+public import server.httpserver;

@@ -1,4 +1,4 @@
-module stream;
+module core.stream;
 
 import std.algorithm : copy, max, min;
 import std.string : indexOf;

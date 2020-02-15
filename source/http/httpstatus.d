@@ -1,4 +1,4 @@
-module httpstatus;
+module http.httpstatus;
 
 enum HttpStatus : int
 {

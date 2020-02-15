@@ -1,11 +1,11 @@
-module httpserver;
+module server.httpserver;
 
 import std.concurrency : spawn;
 import std.socket : InternetAddress, Socket, SocketShutdown, SocketOption,
     SocketOptionLevel, TcpSocket;
 import http : HttpStatus, Request, Response;
-import socketstream : SocketStream;
-import application : Application;
+import core.socketstream : SocketStream;
+import applications.application : Application;
 
 class HttpServer
 {

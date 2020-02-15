@@ -1,12 +1,12 @@
-module request;
+module http.request;
 
 import std.algorithm : findSplit;
 import std.array : array;
 import std.conv : to;
 import std.exception : enforce;
 import std.string : strip;
-import stream : InputStream, MemoryStream;
-import httpversion : HttpVersion, HttpVersions;
+import core.stream : InputStream, MemoryStream;
+import http.httpversion : HttpVersion, HttpVersions;
 import uri : Uri;
 
 alias Method = string;

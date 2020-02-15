@@ -1,3 +1,3 @@
 module applications;
 
-public import application;
+public import applications.application;

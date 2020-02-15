@@ -1,7 +1,6 @@
-module application;
+module applications.application;
 
-import request : Request;
-import response : Response;
+import http : Request, Response;
 
 shared interface Application
 {

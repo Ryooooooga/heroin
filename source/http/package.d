@@ -1,6 +1,6 @@
 module http;
 
-public import httpversion;
-public import httpstatus;
-public import request;
-public import response;
+public import http.httpversion;
+public import http.httpstatus;
+public import http.request;
+public import http.response;

@@ -1,8 +1,8 @@
-module response;
+module http.response;
 
 import std.outbuffer : OutBuffer;
-import httpversion : HttpVersion, HttpVersions;
-import httpstatus : HttpStatus, text;
+import http.httpversion : HttpVersion, HttpVersions;
+import http.httpstatus : HttpStatus, text;
 
 class Response
 {

@@ -1,6 +1,6 @@
 module routers;
 
-public import router;
+public import routers.router;
 
 import http : Request, Response;
 

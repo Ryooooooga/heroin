@@ -9,11 +9,11 @@ import std.json;
 import std.string;
 import dmarkdown;
 import sqlite;
-import http;
-import server;
-import application;
-import routers;
-import renderers;
+import http : HttpStatus, Request, Response;
+import server : HttpServer;
+import applications : Application;
+import routers : Router;
+import renderers : renderFile;
 
 class Post
 {
@@ -168,7 +168,7 @@ void serveStatic(Router router, string root, string path, string pattern)
         const relative = relativePath(file.name, absPath);
         const uri = buildNormalizedPath(root, relative);
 
-        router.get(uri, (req, res) {renderFile(req, res, file.name);});
+        router.get(uri, (req, res) { renderFile(req, res, file.name); });
     });
 }
 

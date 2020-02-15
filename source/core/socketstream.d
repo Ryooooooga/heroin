@@ -1,7 +1,7 @@
-module socketstream;
+module core.socketstream;
 
 import std.socket : Socket;
-import stream : InputStream;
+import core.stream : InputStream;
 
 class SocketStream : InputStream
 {
