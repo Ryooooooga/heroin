@@ -30,9 +30,9 @@ class HttpServer
         {
             try
             {
-                spawn(function(shared Application app, shared Socket client_socket) {
-                    onConnected(app, cast() client_socket);
-                }, _app, cast(shared) _socket.accept());
+                spawn(function(shared HttpServer self, shared Socket client_socket) {
+                    onConnected(self, cast() client_socket);
+                }, cast(shared) this, cast(shared) _socket.accept());
             }
             catch (Throwable e)
             {
@@ -41,7 +41,7 @@ class HttpServer
         }
     }
 
-    private static void onConnected(shared Application app, Socket socket)
+    private static void onConnected(shared HttpServer self, Socket socket)
     {
         auto response = new Response();
 
@@ -49,14 +49,14 @@ class HttpServer
         {
             auto request = Request.parse(new SocketStream(socket));
 
-            app.onConnected(request, response);
+            self._app.onConnected(request, response);
         }
         catch (Throwable e)
         {
             response.status = HttpStatus.INTERNAL_SERVER_ERROR;
             response.body = e.toString();
 
-            app.onError(e);
+            self._app.onError(e);
         }
 
         socket.send(response.toString());
