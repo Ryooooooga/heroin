@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"Ryooooooga <ryoga_314@yahoo.co.jp>"
+	],
+	"copyright": "Copyright © 2020, Ryooooooga <ryoga_314@yahoo.co.jp>",
+	"description": "A toy web application framework",
+	"license": "MIT",
+	"name": "heroin"
+}
