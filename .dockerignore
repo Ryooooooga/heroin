@@ -1,0 +1,13 @@
+.dub
+*-test-*
+*.a
+*.dll
+*.dylib
+*.exe
+*.lib
+*.o
+*.obj
+*.so
+
+/heroin
+/examples/simple/heroin_simple
