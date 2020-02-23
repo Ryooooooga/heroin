@@ -1,0 +1,23 @@
+name: Format
+on: [push, pull_request]
+
+jobs:
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install D compiler
+        uses: mihails-strasuns/setup-dlang@v0.3.0
+        with:
+          compiler: dmd-2.088.0
+
+      - name: dub fetch dfmt
+        run: dub fetch dfmt
+
+      - name: dub -q run dfmt -- .
+        run: dub -q run dfmt -- .
+
+      - name: git diff --exit-code
+        run: git diff --exit-code
