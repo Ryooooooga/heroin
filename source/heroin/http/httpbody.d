@@ -4,16 +4,16 @@ import std.format : format;
 import std.typecons : Nullable, nullable;
 import heroin.core.stream : InputStream;
 import heroin.http : HttpException;
-import heroin.http.httpheader : HttpHeader;
+import heroin.http.httpheaders : HttpHeaders;
 import heroin.http.httpstatus : HttpStatus;
 
 class HttpBody
 {
-    private HttpHeader _header;
+    private HttpHeaders _header;
     private InputStream _stream;
     private Nullable!(ubyte[]) _bytes;
 
-    this(HttpHeader header, InputStream stream)
+    this(HttpHeaders header, InputStream stream)
     in
     {
         assert(header);
@@ -68,7 +68,7 @@ unittest
     auto b = {
         auto text = "Hello, world!";
 
-        auto header = new HttpHeader();
+        auto header = new HttpHeaders();
         header.contentLength = text.length;
 
         return new HttpBody(header, new MemoryInputStream(text));

@@ -1,10 +1,10 @@
-module heroin.http.httpheader;
+module heroin.http.httpheaders;
 
 import std.conv : to;
 import std.typecons : Nullable, nullable;
 import std.uni : toLower;
 
-class HttpHeader
+class HttpHeaders
 {
     private string[string] _fields;
 
@@ -36,7 +36,7 @@ class HttpHeader
 
     unittest
     {
-        auto h = new HttpHeader();
+        auto h = new HttpHeaders();
         h.set("Host", "example.com");
         h.set("Content-Type", "application/json");
         h.set("Content-Length", "2");
@@ -72,7 +72,7 @@ class HttpHeader
 
     unittest
     {
-        auto h = new HttpHeader();
+        auto h = new HttpHeaders();
         h.set("Vary", "Accept-Encoding");
         h.set("Vary", "User-Agent");
 
@@ -93,7 +93,7 @@ class HttpHeader
 
     unittest
     {
-        auto h = new HttpHeader();
+        auto h = new HttpHeaders();
         h.set("Host", "example.com");
         h.set("Content-Type", "application/json");
         h.set("Content-Length", "2");
@@ -153,7 +153,7 @@ class HttpHeader
 
     unittest
     {
-        auto h = new HttpHeader();
+        auto h = new HttpHeaders();
 
         assert(h.contentType.isNull);
         assert(h.contentLength.isNull);
@@ -170,7 +170,7 @@ class HttpHeader
 
     unittest
     {
-        auto h = new HttpHeader();
+        auto h = new HttpHeaders();
         h.contentType = "text/html";
         h.contentLength = 128;
         h.contentEncoding = "gzip";
