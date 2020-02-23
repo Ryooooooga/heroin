@@ -1,0 +1,15 @@
+name: Docker
+on: [push]
+
+jobs:
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: docker build --tag heroin .
+        run: docker build --tag heroin .
+
+      - name: docker run --rm heroin dub -q test
+        run: docker run --rm heroin dub -q test
