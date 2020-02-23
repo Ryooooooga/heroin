@@ -1,8 +1,11 @@
 module heroin.http.httpbody;
 
+import std.format : format;
 import std.typecons : Nullable, nullable;
 import heroin.core.stream : InputStream;
+import heroin.http : HttpException;
 import heroin.http.httpheader : HttpHeader;
+import heroin.http.httpstatus : HttpStatus;
 
 class HttpBody
 {
@@ -37,7 +40,7 @@ class HttpBody
         case "identity":
             if (length.isNull)
             {
-                assert(0); // TODO: 400 error
+                throw new HttpException(HttpStatus.BAD_REQUEST);
             }
 
             _bytes = new ubyte[length.get()].nullable;
@@ -45,7 +48,8 @@ class HttpBody
             break;
 
         default:
-            assert(0); // TODO: 415 error
+            throw new HttpException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "Unsupported Content-Encoding %s".format(encoding));
         }
 
         return _bytes.get();
