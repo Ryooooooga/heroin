@@ -12,6 +12,7 @@ class HttpHeader
     {
         CONTENT_TYPE = "content-type",
         CONTENT_LENGTH = "content-length",
+        CONTENT_ENCODING = "content-encoding",
     }
 
     this()
@@ -132,18 +133,39 @@ class HttpHeader
         _fields[CONTENT_LENGTH] = value.to!string();
     }
 
+    /// `identity` if `Content-Encoding` is not set
+    @property string contentEncoding() const
+    {
+        if (auto v = CONTENT_ENCODING in _fields)
+        {
+            return *v;
+        }
+        else
+        {
+            return "identity";
+        }
+    }
+
+    @property void contentEncoding(string value)
+    {
+        _fields[CONTENT_ENCODING] = value;
+    }
+
     unittest
     {
         auto h = new HttpHeader();
 
         assert(h.contentType.isNull);
         assert(h.contentLength.isNull);
+        assert(h.contentEncoding == "identity");
 
         h.set("Content-Type", "application/json");
         h.set("Content-Length", "2");
+        h.set("Content-Encoding", "gzip");
 
         assert(h.contentType == "application/json");
         assert(h.contentLength == 2);
+        assert(h.contentEncoding == "gzip");
     }
 
     unittest
@@ -151,8 +173,10 @@ class HttpHeader
         auto h = new HttpHeader();
         h.contentType = "text/html";
         h.contentLength = 128;
+        h.contentEncoding = "gzip";
 
         assert(h.contentType == "text/html");
         assert(h.contentLength == 128);
+        assert(h.contentEncoding == "gzip");
     }
 }
