@@ -2,6 +2,7 @@ module heroin.http.httpheader;
 
 import std.conv : to;
 import std.typecons : Nullable, nullable;
+import std.uni : toLower;
 
 class HttpHeader
 {
@@ -9,8 +10,8 @@ class HttpHeader
 
     enum
     {
-        CONTENT_TYPE = "Content-Type",
-        CONTENT_LENGTH = "Content-Length",
+        CONTENT_TYPE = "content-type",
+        CONTENT_LENGTH = "content-length",
     }
 
     this()
@@ -29,7 +30,7 @@ class HttpHeader
 
     bool contains(string key) const
     {
-        return !!(key in _fields);
+        return !!(key.toLower in _fields);
     }
 
     unittest
@@ -40,9 +41,9 @@ class HttpHeader
         h.set("Content-Length", "2");
 
         assert(h.fields == cast(const)[
-                "Host": "example.com",
-                "Content-Type": "application/json",
-                "Content-Length": "2",
+                "host": "example.com",
+                "content-type": "application/json",
+                "content-length": "2",
                 ]);
 
         assert(h.keys.length == 3);
@@ -55,6 +56,8 @@ class HttpHeader
 
     void set(string key, string value)
     {
+        key = key.toLower;
+
         if (auto v = key in _fields)
         {
             *v ~= ",";
@@ -77,7 +80,7 @@ class HttpHeader
 
     Nullable!string get(string key) const
     {
-        if (const v = key in _fields)
+        if (const v = key.toLower in _fields)
         {
             return (*v).nullable;
         }
@@ -96,7 +99,9 @@ class HttpHeader
 
         assert(h.get("Host") == "example.com");
         assert(h.get("Content-Type") == "application/json");
+        assert(h.get("content-type") == "application/json");
         assert(h.get("Content-Length") == "2");
+        assert(h.get("CONTENT-LENGTH") == "2");
         assert(h.get("Accept").isNull);
     }
 
