@@ -3,7 +3,7 @@
     "Ryooooooga <ryoga_314@yahoo.co.jp>"
   ],
   "copyright": "Copyright © 2020, Ryooooooga <ryoga_314@yahoo.co.jp>",
-  "description": "A toy web application framework",
+  "description": "A toy web application framework written in D",
   "license": "MIT",
   "name": "heroin",
   "targetType": "library",
