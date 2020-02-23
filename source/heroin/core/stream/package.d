@@ -46,6 +46,11 @@ abstract class InputStream
         }
     }
 
+    void readExact(void[] buffer)
+    {
+        readExact(buffer.ptr, buffer.length);
+    }
+
     char peekChar()
     {
         if (_lookahead.length == 0)
