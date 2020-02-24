@@ -9,20 +9,18 @@ class HttpException : Exception
     private HttpStatus _status;
     private string _description;
 
-    this(HttpStatus status)
-    {
-        this(status, status.toString());
-    }
-
-    this(HttpStatus status, string description)
+    this(HttpStatus status, string description = null, string file = __FILE__,
+            size_t line = __LINE__, Throwable next = null)
     {
         import std.format : format;
 
         _status = status;
-        _description = description;
+        _description = description ? description : _status.toString();
 
-        super("HttpException status: %d %s, description: %s".format(_status.code,
-                _status, _description));
+        string message = "HttpException status: %d %s, description: %s".format(_status.code,
+                _status, _description);
+
+        super(message, file, line, next);
     }
 
     @property HttpStatus status() const

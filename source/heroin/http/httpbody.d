@@ -2,7 +2,7 @@ module heroin.http.httpbody;
 
 import std.format : format;
 import std.typecons : Nullable, nullable;
-import heroin.core.stream : InputStream;
+import heroin.core.stream : InputStream, StreamException;
 import heroin.http : HttpException;
 import heroin.http.httpheaders : HttpHeaders;
 import heroin.http.httpstatus : HttpStatus;
@@ -27,32 +27,39 @@ class HttpBody
 
     const(ubyte)[] bytes()
     {
-        if (!_bytes.isNull)
+        try
         {
-            return _bytes.get();
-        }
-
-        const length = _header.contentLength;
-        const encoding = _header.contentEncoding;
-
-        switch (encoding)
-        {
-        case "identity":
-            if (length.isNull)
+            if (!_bytes.isNull)
             {
-                throw new HttpException(HttpStatus.BAD_REQUEST);
+                return _bytes.get();
             }
 
-            _bytes = new ubyte[length.get()].nullable;
-            _stream.readExact(_bytes.get());
-            break;
+            const length = _header.contentLength;
+            const encoding = _header.contentEncoding;
 
-        default:
-            throw new HttpException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    "Unsupported Content-Encoding %s".format(encoding));
+            switch (encoding)
+            {
+            case "identity":
+                if (length.isNull)
+                {
+                    throw new HttpException(HttpStatus.BAD_REQUEST);
+                }
+
+                _bytes = new ubyte[length.get()].nullable;
+                _stream.readExact(_bytes.get());
+                break;
+
+            default:
+                throw new HttpException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                        "Unsupported Content-Encoding %s".format(encoding));
+            }
+
+            return _bytes.get();
         }
-
-        return _bytes.get();
+        catch (StreamException e)
+        {
+            throw new HttpException(HttpStatus.BAD_REQUEST);
+        }
     }
 
     string text()
