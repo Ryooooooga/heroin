@@ -1,13 +1,11 @@
 module heroin.core.stream;
 
 import std.algorithm : endsWith, min;
+import std.exception : basicExceptionCtors;
 
 class StreamException : Exception
 {
-    this(string message)
-    {
-        super(message);
-    }
+    mixin basicExceptionCtors;
 }
 
 abstract class InputStream
@@ -44,6 +42,11 @@ abstract class InputStream
 
             pos += readSize;
         }
+    }
+
+    void readExact(void[] buffer)
+    {
+        readExact(buffer.ptr, buffer.length);
     }
 
     char peekChar()
