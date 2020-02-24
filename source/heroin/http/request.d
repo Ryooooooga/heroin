@@ -112,6 +112,8 @@ class Request
 Host: localhost\r
 Content-Type: application/json\r
 Content-Length: 13\r
+Vary: Accept-Encoding\r
+Vary: User-Agent\r
 \r
 Hello, world!"));
 
@@ -122,7 +124,8 @@ Hello, world!"));
         assert(r.headers.fields == cast(const)[
                 "host": "localhost",
                 "content-type": "application/json",
-                "content-length": "13"
+                "content-length": "13",
+                "vary": "Accept-Encoding, User-Agent",
                 ]);
 
         assert(r.body_.text == "Hello, world!");
