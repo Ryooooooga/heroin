@@ -3,6 +3,7 @@ module heroin.http;
 public import heroin.http.httpbody;
 public import heroin.http.httpheaders;
 public import heroin.http.httpstatus;
+public import heroin.http.request;
 
 class HttpException : Exception
 {

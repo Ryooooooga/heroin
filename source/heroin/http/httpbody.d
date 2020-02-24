@@ -58,7 +58,7 @@ class HttpBody
         }
         catch (StreamException e)
         {
-            throw new HttpException(HttpStatus.BAD_REQUEST);
+            throw new HttpException(HttpStatus.BAD_REQUEST, null, __FILE__, __LINE__, e);
         }
     }
 

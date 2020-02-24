@@ -57,26 +57,34 @@ class HttpHeaders
 
     void set(string key, string value)
     {
+        _fields[key.toLower] = value;
+    }
+
+    void append(string key, string value)
+    {
         key = key.toLower;
 
         if (auto v = key in _fields)
         {
-            *v ~= ",";
+            *v ~= ", ";
             *v ~= value;
         }
         else
         {
-            _fields[key] = value;
+            set(key, value);
         }
     }
 
     unittest
     {
         auto h = new HttpHeaders();
-        h.set("Vary", "Accept-Encoding");
-        h.set("Vary", "User-Agent");
+        h.set("Content-Type", "text/html");
+        h.set("Content-Type", "application/json");
+        h.append("Vary", "Accept-Encoding");
+        h.append("Vary", "User-Agent");
 
-        assert(h.get("Vary") == "Accept-Encoding,User-Agent");
+        assert(h.get("Content-Type") == "application/json");
+        assert(h.get("Vary") == "Accept-Encoding, User-Agent");
     }
 
     Nullable!string get(string key) const
