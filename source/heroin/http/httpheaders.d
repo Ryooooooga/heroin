@@ -75,21 +75,11 @@ class HttpHeaders
         }
     }
 
-    unittest
-    {
-        auto h = new HttpHeaders();
-        h.set("Content-Type", "text/html");
-        h.set("Content-Type", "application/json");
-        h.append("Vary", "Accept-Encoding");
-        h.append("Vary", "User-Agent");
-
-        assert(h.get("Content-Type") == "application/json");
-        assert(h.get("Vary") == "Accept-Encoding, User-Agent");
-    }
-
     Nullable!string get(string key) const
     {
-        if (const v = key.toLower in _fields)
+        key = key.toLower;
+
+        if (const v = key in _fields)
         {
             return (*v).nullable;
         }
@@ -99,8 +89,21 @@ class HttpHeaders
         }
     }
 
+    string opIndex(string key) const
+    {
+        return _fields[key.toLower];
+    }
+
+    void opIndexAssign(string value, string key)
+    {
+        set(key, value);
+    }
+
     unittest
     {
+        import core.exception : RangeError;
+        import std.exception : assertThrown;
+
         auto h = new HttpHeaders();
         h.set("Host", "example.com");
         h.set("Content-Type", "application/json");
@@ -112,6 +115,28 @@ class HttpHeaders
         assert(h.get("Content-Length") == "2");
         assert(h.get("CONTENT-LENGTH") == "2");
         assert(h.get("Accept").isNull);
+
+        assert(h["Host"] == "example.com");
+        assert(h["Content-Type"] == "application/json");
+        assert(h["content-type"] == "application/json");
+        assert(h["Content-Length"] == "2");
+        assert(h["CONTENT-LENGTH"] == "2");
+        assertThrown!RangeError(h["Accept"]);
+    }
+
+    unittest
+    {
+        auto h = new HttpHeaders();
+        h["Host"] = "localhost";
+        h["Host"] = "example.com";
+        h.set("Content-Type", "text/html");
+        h.set("Content-Type", "application/json");
+        h.append("Vary", "Accept-Encoding");
+        h.append("Vary", "User-Agent");
+
+        assert(h.get("Host") == "example.com");
+        assert(h.get("Content-Type") == "application/json");
+        assert(h.get("Vary") == "Accept-Encoding, User-Agent");
     }
 
     @property Nullable!string contentType() const
